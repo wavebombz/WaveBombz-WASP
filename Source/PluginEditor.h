@@ -19,6 +19,7 @@ private:
  std::unique_ptr<ComboAttachment> voiceAttachment;
  std::unique_ptr<SliderAttachment> portaAttachment;
  std::array<std::unique_ptr<juce::ComboBox>,8> fxSwitches;
+ std::array<juce::Label,8> fxSwitchLabels;
  std::array<std::unique_ptr<ComboAttachment>,8> fxAttachments;
  std::array<std::unique_ptr<juce::Slider>,8> fxControls;
  std::array<juce::Label,8> fxControlLabels;
