@@ -1,6 +1,8 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include <array>
+#include <vector>
 class WaspLookAndFeel final : public juce::LookAndFeel_V4 {
 public: WaspLookAndFeel(); void drawRotarySlider(juce::Graphics&,int,int,int,int,float,float,float,juce::Slider&) override;
 };
