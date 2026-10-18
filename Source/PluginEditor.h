@@ -20,7 +20,8 @@ private:
  std::array<std::unique_ptr<ComboAttachment>,8> fxAttachments;
  std::array<std::unique_ptr<juce::Slider>,8> fxControls;
  std::array<std::unique_ptr<SliderAttachment>,8> fxControlAttachments;
- juce::TextButton savePresetButton{"SAVE PRESET"},loadPresetButton{"LOAD PRESET"};
+ juce::TextButton savePresetButton{"SAVE PRESET"},loadPresetButton{"LOAD PRESET"},openBankButton{"OPEN BANK"};
+ std::vector<juce::File> bankFiles;
  std::unique_ptr<juce::FileChooser> fileChooser;
  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveBombzWASPEditor)
 };
