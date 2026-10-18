@@ -69,7 +69,7 @@ void WaveBombzWASPProcessor::prepareToPlay(double sr,int){
  flanger.setCentreDelay(2.0f);flanger.setDepth(.35f);flanger.setRate(.25f);flanger.setFeedback(.1f);flanger.setMix(.5f);
  chorus.setCentreDelay(10.0f);chorus.setDepth(.2f);chorus.setRate(.8f);chorus.setMix(.5f);
  phaser.setRate(.25f);phaser.setDepth(.5f);phaser.setCentreFrequency(1000.0f);phaser.setFeedback(.2f);phaser.setMix(.5f);
- for(auto& f:meterFilters){f.first.coefficients=juce::dsp::IIR::Coefficients<float>::makeHighPass(sr,60.0f);f.second.coefficients=juce::dsp::IIR::Coefficients<float>::makeHighShelf(sr,1500.0f,.7f,juce::Decibels::decibelsToGain(4.0f));}
+ for(size_t i=0;i<meterFilters.size();++i){auto& f=meterFilters[i];f.first.coefficients=juce::dsp::IIR::Coefficients<float>::makeHighPass(sr,60.0f);f.second.coefficients=juce::dsp::IIR::Coefficients<float>::makeHighShelf(sr,1500.0f,.7f,juce::Decibels::decibelsToGain(4.0f));eqLow[i].coefficients=juce::dsp::IIR::Coefficients<float>::makeLowShelf(sr,180.0f,.7f,juce::Decibels::decibelsToGain(1.0f));eqHigh[i].coefficients=juce::dsp::IIR::Coefficients<float>::makeHighShelf(sr,5000.0f,.7f,juce::Decibels::decibelsToGain(1.0f));}
 }
 void WaveBombzWASPProcessor::releaseResources(){}
 bool WaveBombzWASPProcessor::isBusesLayoutSupported(const BusesLayout& l)const{return l.getMainOutputChannelSet()==juce::AudioChannelSet::mono()||l.getMainOutputChannelSet()==juce::AudioChannelSet::stereo();}
@@ -83,7 +83,7 @@ void WaveBombzWASPProcessor::processBlock(juce::AudioBuffer<float>& b,juce::Midi
  auto raw=[this](const char* id){return apvts.getRawParameterValue(id)->load();};
  if((int)raw("FXCOMP")){compressor.setThreshold(raw("FXCOMPTHRESH"));juce::dsp::AudioBlock<float> block(b);juce::dsp::ProcessContextReplacing<float> ctx(block);compressor.process(ctx);}
  if((int)raw("FXDIST")){float amount=1.0f+raw("FXDISTAMT")*15.0f;for(int ch=0;ch<b.getNumChannels();++ch)for(int i=0;i<b.getNumSamples();++i)b.setSample(ch,i,std::tanh(b.getSample(ch,i)*amount));}
- if((int)raw("FXEQ")){for(int ch=0;ch<b.getNumChannels();++ch){auto* lo=eqLow[(size_t)ch].coefficients; (void)lo;}}
+ if((int)raw("FXEQ")){for(int ch=0;ch<b.getNumChannels();++ch){eqLow[(size_t)ch].coefficients=juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(),180.0f,.7f,juce::Decibels::decibelsToGain(raw("FXEQLOW")));eqHigh[(size_t)ch].coefficients=juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(),5000.0f,.7f,juce::Decibels::decibelsToGain(raw("FXEQHIGH")));for(int i=0;i<b.getNumSamples();++i){float x=b.getSample(ch,i);x=eqLow[(size_t)ch].processSample(x);x=eqHigh[(size_t)ch].processSample(x);b.setSample(ch,i,x);}}}
  if((int)raw("FXDELAY")){delay.setDelay((float)getSampleRate()*raw("FXDELAYTIME")/1000.0f);for(int ch=0;ch<b.getNumChannels();++ch)for(int i=0;i<b.getNumSamples();++i){float dry=b.getSample(ch,i),wet=delay.popSample(ch);delay.pushSample(ch,dry+wet*raw("FXDELAYFB"));b.setSample(ch,i,dry*(1-raw("FXDELAYMIX"))+wet*raw("FXDELAYMIX"));}}
  if((int)raw("FXREVERB")){juce::dsp::Reverb::Parameters rp;rp.roomSize=.65f;rp.damping=.4f;rp.wetLevel=raw("FXREVERBMIX");rp.dryLevel=1.0f-rp.wetLevel;reverb.setParameters(rp);juce::dsp::AudioBlock<float> block(b);juce::dsp::ProcessContextReplacing<float> ctx(block);reverb.process(ctx);}
  if((int)raw("FXFLANGER")){flanger.setMix(raw("FXFLANGERMIX"));juce::dsp::AudioBlock<float> block(b);juce::dsp::ProcessContextReplacing<float> ctx(block);flanger.process(ctx);}
