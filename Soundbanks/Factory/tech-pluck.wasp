@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WASPPRESET name="Tech Pluck">
+  <PARAM id="OSC1WAVE" value="2"/>
+  <PARAM id="OSC2WAVE" value="0"/>
+  <PARAM id="OSC3WAVE" value="1"/>
+  <PARAM id="OSC1MIX" value="0.8"/>
+  <PARAM id="OSC2MIX" value="0.25"/>
+  <PARAM id="OSC3MIX" value="0.15"/>
+  <PARAM id="CUTOFF" value="1900"/>
+  <PARAM id="RESONANCE" value="0.55"/>
+  <PARAM id="ATTACK" value="0.001"/>
+  <PARAM id="DECAY" value="0.16"/>
+  <PARAM id="SUSTAIN" value="0.05"/>
+  <PARAM id="RELEASE" value="0.12"/>
+  <PARAM id="FXCOMP" value="1"/>
+  <PARAM id="FXREVERB" value="1"/>
+  <PARAM id="FXREVERBMIX" value="0.12"/>
+</WASPPRESET>
