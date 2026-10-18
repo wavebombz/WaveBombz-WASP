@@ -20,7 +20,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  oscLabel.setText("OSCILLATORS",juce::dontSendNotification);filterLabel.setText("FILTER / DRIVE",juce::dontSendNotification);envLabel.setText("AMP ENVELOPE",juce::dontSendNotification);lfoLabel.setText("LFO / MOD MATRIX",juce::dontSendNotification);
  for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel}){l->setFont(juce::Font(juce::FontOptions(14,juce::Font::bold)));l->setColour(juce::Label::textColourId,yellow);addAndMakeVisible(*l);}
  addKnob("OSC1MIX","OSC 1 MIX");addKnob("OSC2MIX","OSC 2 MIX");addKnob("OSC3MIX","OSC 3 MIX");addKnob("CUTOFF","CUTOFF");addKnob("RESONANCE","RESONANCE");addKnob("DRIVE","DRIVE");
- addKnob("ATTACK","ATTACK");addKnob("DECAY","DECAY");addKnob("SUSTAIN","SUSTAIN");addKnob("RELEASE","RELEASE");addKnob("LFO1RATE","LFO RATE");addKnob("LFO1AMT","LFO AMOUNT");addKnob("ENV2CUT","ENV 2 → CUTOFF");addKnob("LFO1CUT","LFO 1 → CUTOFF");addKnob("MASTER","MASTER");
+ addKnob("ATTACK","ATTACK");addKnob("DECAY","DECAY");addKnob("SUSTAIN","SUSTAIN");addKnob("RELEASE","RELEASE");addKnob("LFO1RATE","LFO RATE");addKnob("LFO1AMT","LFO AMOUNT");addKnob("ENV2CUT","ENV 2 → CUTOFF");addKnob("LFO1CUT","LFO 1 → CUTOFF");addKnob("MASTER","MASTER");addKnob("ANALOG","ANALOG CHARACTER");addKnob("DIGITALEDGE","DIGITAL EDGE");
  modTitle.setText("MODULATION ROUTING",juce::dontSendNotification);modTitle.setColour(juce::Label::textColourId,yellow);modTitle.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(modTitle);
  modSource.addItem("ENV 2",1);modSource.addItem("LFO 1",2);addAndMakeVisible(modSource);sourceAttachment=std::make_unique<ComboAttachment>(processor.getState(),"MODSOURCE",modSource);
  modTarget.addItem("Cutoff",1);modTarget.addItem("OSC 1 Mix",2);modTarget.addItem("OSC 2 Mix",3);addAndMakeVisible(modTarget);targetAttachment=std::make_unique<ComboAttachment>(processor.getState(),"MODTARGET",modTarget);
@@ -51,7 +51,7 @@ void WaveBombzWASPEditor::resized(){
  auto place=[&](int i,int x,int y,int w=90,int h=100){knobs[(size_t)i]->setBounds(x,y,w,h);};
  place(0,35,125);place(1,125,125);place(2,215,125);place(3,355,125);place(4,450,125);place(5,545,125);
  place(6,45,320,100);place(7,150,320,100);place(8,255,320,100);place(9,360,320,100);
- place(10,670,135);place(11,765,135);place(12,670,250);place(13,765,250);place(14,865,250);
+ place(10,670,135);place(11,765,135);place(15,865,135);place(16,960,135);place(12,670,250);place(13,765,250);place(14,865,250);
  modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(35+col*255,541+row*34,150,18);fxSwitches[i]->setBounds(35+col*255,558+row*34,150,24);}
  for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(170+col*220,615+row*85,135,16);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
  meterText.setBounds(22,815,1030,28);
