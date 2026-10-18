@@ -18,6 +18,11 @@ private:
  std::array<juce::ComboBox,3> oscillatorWaveSelectors;
  std::array<std::unique_ptr<ComboAttachment>,3> oscillatorWaveAttachments;
  std::array<juce::TextButton,3> sampleButtons;
+ std::array<juce::Slider,3> oscillatorTuneSliders;
+ std::array<std::unique_ptr<SliderAttachment>,3> oscillatorTuneAttachments;
+ std::array<juce::ComboBox,3> oscillatorOctaveSelectors;
+ std::array<std::unique_ptr<ComboAttachment>,3> oscillatorOctaveAttachments;
+ std::array<juce::Label,3> oscillatorTuneLabels, oscillatorOctaveLabels;
  juce::ComboBox modSource,modTarget,factoryPreset,voiceMode;
  juce::Slider modDepth,portamento;
  // Attachments must be declared after the controls they reference so they are destroyed first.
