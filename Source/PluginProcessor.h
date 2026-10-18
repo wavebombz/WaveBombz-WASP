@@ -12,7 +12,7 @@ public:
  double getTailLengthSeconds() const override; int getNumPrograms() override; int getCurrentProgram() override; void setCurrentProgram(int) override;
  const juce::String getProgramName(int) override; void changeProgramName(int,const juce::String&) override;
  void getStateInformation(juce::MemoryBlock&) override; void setStateInformation(const void*,int) override;
- bool savePreset(const juce::File&); bool loadPreset(const juce::File&);
+ bool savePreset(const juce::File&); bool loadPreset(const juce::File&); void loadFactoryPreset(int index);
  juce::AudioProcessorValueTreeState& getState(); float getMomentaryLUFS() const; float getIntegratedLUFS() const; float getPeak() const;
  static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 private:
