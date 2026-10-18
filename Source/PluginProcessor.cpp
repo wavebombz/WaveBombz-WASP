@@ -8,7 +8,7 @@ class WaspVoice final:public juce::SynthesiserVoice {
 public:
  explicit WaspVoice(juce::AudioProcessorValueTreeState& s):state(s){}
  bool canPlaySound(juce::SynthesiserSound* s) override{return dynamic_cast<WaspSound*>(s)!=nullptr;}
- void startNote(int midi,float velocity,juce::SynthesiserSound*,int) override{hz=(float)juce::MidiMessage::getMidiNoteInHertz(midi);vel=velocity;phase.fill(0);filter=0;amp.noteOn();fenv.noteOn();}
+ void startNote(int midi,float velocity,juce::SynthesiserSound*,int) override{targetHz=(float)juce::MidiMessage::getMidiNoteInHertz(midi);float porta=state.getRawParameterValue("PORTAMENTO")->load();if(hz<=0.0f||porta<=0.001f||(int)state.getRawParameterValue("MONO")->load()!=2)hz=targetHz;vel=velocity;phase.fill(0);filter=0;amp.noteOn();fenv.noteOn();}
  void stopNote(float,bool tail) override{amp.noteOff();fenv.noteOff();if(!tail)clearCurrentNote();}
  void pitchWheelMoved(int) override{} void controllerMoved(int,int) override{}
  void prepare(double sr){rate=sr;amp.setSampleRate(sr);fenv.setSampleRate(sr);amp.setParameters({.01f,.18f,.8f,.25f});fenv.setParameters({.01f,.2f,.6f,.3f});}
@@ -24,7 +24,7 @@ public:
   const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
   for(int i=0;i<n;++i){
-   float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
+   float glide=state.getRawParameterValue("PORTAMENTO")->load();if(glide>0.001f)hz+=(targetHz-hz)*juce::jlimit(0.00001f,0.02f,1.0f/(glide*1200.0f));else hz=targetHz;\n   float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
    lfoPhase+=2*pi*lrate/sr;if(lfoPhase>2*pi)lfoPhase-=2*pi;
    float a=wave(s1,phase[0]),b=wave(s2,phase[1]+fm*a*4),c=wave(s3,phase[2]);
    const float route=(modSource==0?fe:lfo)*modDepth;
@@ -37,7 +37,7 @@ public:
   }
  }
 private:
- juce::AudioProcessorValueTreeState& state;juce::ADSR amp,fenv;std::array<float,3> phase{0,0,0};double rate=44100;float hz=440,vel=0,filter=0,lfoPhase=0;
+ juce::AudioProcessorValueTreeState& state;juce::ADSR amp,fenv;std::array<float,3> phase{0,0,0};double rate=44100;float hz=440,targetHz=440,vel=0,filter=0,lfoPhase=0;
 };
 }
 WaveBombzWASPProcessor::WaveBombzWASPProcessor():AudioProcessor(BusesProperties().withOutput("Output",juce::AudioChannelSet::stereo(),true)),apvts(*this,nullptr,"PARAMETERS",createParameterLayout()){
@@ -114,7 +114,13 @@ void WaveBombzWASPProcessor::loadFactoryPreset(int index){
  for(const auto& s:presets[(size_t)index])if(auto* param=apvts.getParameter(s.id))param->setValueNotifyingHost(param->convertTo0to1(s.value));
 }
 bool WaveBombzWASPProcessor::savePreset(const juce::File& file){auto state=apvts.copyState();std::unique_ptr<juce::XmlElement> xml(state.createXml());return xml!=nullptr&&xml->writeTo(file);}
-bool WaveBombzWASPProcessor::loadPreset(const juce::File& file){auto xml=juce::XmlDocument::parse(file);if(!xml||!xml->hasTagName(apvts.state.getType()))return false;apvts.replaceState(juce::ValueTree::fromXml(*xml));return true;}
+bool WaveBombzWASPProcessor::loadPreset(const juce::File& file){
+ auto xml=juce::XmlDocument::parse(file);if(!xml)return false;
+ if(xml->hasTagName(apvts.state.getType())){apvts.replaceState(juce::ValueTree::fromXml(*xml));return true;}
+ if(!xml->hasTagName("WASPPRESET"))return false;
+ for(auto* p=xml->getFirstChildElement();p;p=p->getNextElement())if(p->hasTagName("PARAM")){auto id=p->getStringAttribute("id");auto* param=apvts.getParameter(id);if(param)param->setValueNotifyingHost(param->convertTo0to1((float)p->getDoubleAttribute("value")));}
+ return true;
+}
 void WaveBombzWASPProcessor::getStateInformation(juce::MemoryBlock& d){auto s=apvts.copyState();std::unique_ptr<juce::XmlElement>x(s.createXml());copyXmlToBinary(*x,d);}
 void WaveBombzWASPProcessor::setStateInformation(const void* d,int n){std::unique_ptr<juce::XmlElement>x(getXmlFromBinary(d,n));if(x&&x->hasTagName(apvts.state.getType()))apvts.replaceState(juce::ValueTree::fromXml(*x));}
 juce::AudioProcessorValueTreeState& WaveBombzWASPProcessor::getState(){return apvts;}float WaveBombzWASPProcessor::getMomentaryLUFS()const{return momentary.load();}float WaveBombzWASPProcessor::getIntegratedLUFS()const{return integrated.load();}float WaveBombzWASPProcessor::getPeak()const{return peak.exchange(0.0f);}
