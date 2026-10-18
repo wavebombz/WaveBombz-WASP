@@ -42,7 +42,7 @@ void WaveBombzWASPEditor::setFxPage(bool showFx){
  showFxPage=showFx;
  synthPageButton.setToggleState(!showFx,juce::dontSendNotification);fxPageButton.setToggleState(showFx,juce::dontSendNotification);
  for(auto& k:knobs)k->setVisible(!showFx);
- for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel,&modTitle,&modSource,&modTarget,&modDepth,&modDepthLabel})l->setVisible(!showFx);
+ for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel,&modTitle,&modDepthLabel})l->setVisible(!showFx);\n modSource.setVisible(!showFx);modTarget.setVisible(!showFx);modDepth.setVisible(!showFx);
  for(auto& s:fxSwitches)s->setVisible(showFx);for(auto& l:fxSwitchLabels)l.setVisible(showFx);
  for(auto& s:fxControls)s->setVisible(showFx);for(auto& l:fxControlLabels)l.setVisible(showFx);
  resized();repaint();
@@ -52,7 +52,7 @@ void WaveBombzWASPEditor::addKnob(const juce::String& id,const juce::String& lab
  attachments.push_back(std::make_unique<SliderAttachment>(processor.getState(),id,*s));knobs.push_back(std::move(s));
 }
 void WaveBombzWASPEditor::paint(juce::Graphics& g){
- g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(36,39,41),0,0,black,(float)getWidth(),(float)getHeight(),true));g.fillAll();g.setColour(yellow);g.fillRect(0,76,getWidth(),3);
+ g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(36,39,41),0,0,black,(float)getWidth(),(float)getHeight(),true));g.fillAll();g.setColour(yellow);g.fillRect(0,76,getWidth(),3);\n if(showFxPage){g.setColour(panel);g.fillRoundedRectangle(18.0f,94.0f,(float)getWidth()-36.0f,700.0f,12.0f);g.setColour(yellow);g.setFont(juce::Font(juce::FontOptions(18.0f,juce::Font::bold)));g.drawText("EFFECTS RACK  /  PROCESSING CHAIN",30,94,getWidth()-60,30,juce::Justification::centredLeft);g.setColour(yellow.withAlpha(.25f));g.fillRect(30,126,getWidth()-60,1);return;}
  auto box=[&](int x,int y,int w,int h){g.setColour(juce::Colours::black.withAlpha(.7f));g.fillRoundedRectangle((float)x+3,(float)y+4,(float)w,(float)h,9);g.setColour(panel);g.fillRoundedRectangle((float)x,(float)y,(float)w,(float)h,9);};
  box(18,92,305,180);box(335,92,305,180);box(18,286,620,180);box(652,92,410,374);box(18,535,1044,270);g.setColour(yellow);g.fillRect(18,485,1044,1);
  g.setColour(yellow.withAlpha(.13f));for(int i=0;i<28;++i)g.fillRect(20+i*35,670,20,2);
