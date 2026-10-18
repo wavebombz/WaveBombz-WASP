@@ -13,11 +13,12 @@ private:
  using SliderAttachment=juce::AudioProcessorValueTreeState::SliderAttachment; using ComboAttachment=juce::AudioProcessorValueTreeState::ComboBoxAttachment;
  WaveBombzWASPProcessor& processor; WaspLookAndFeel look;
  juce::Label title,subtitle,meterText,modTitle,oscLabel,filterLabel,envLabel,lfoLabel,modDepthLabel;
- std::vector<std::unique_ptr<juce::Slider>> knobs; std::vector<std::unique_ptr<SliderAttachment>> attachments; std::unique_ptr<ComboAttachment> sourceAttachment,targetAttachment; std::unique_ptr<SliderAttachment> depthAttachment;
+ std::vector<std::unique_ptr<juce::Slider>> knobs; std::vector<std::unique_ptr<SliderAttachment>> attachments;
  juce::ComboBox modSource,modTarget,factoryPreset,voiceMode;
  juce::Slider modDepth,portamento;
- std::unique_ptr<ComboAttachment> voiceAttachment;
- std::unique_ptr<SliderAttachment> portaAttachment;
+ // Attachments must be declared after the controls they reference so they are destroyed first.
+ std::unique_ptr<ComboAttachment> sourceAttachment,targetAttachment,voiceAttachment;
+ std::unique_ptr<SliderAttachment> depthAttachment,portaAttachment;
  std::array<std::unique_ptr<juce::ComboBox>,8> fxSwitches;
  std::array<juce::Label,8> fxSwitchLabels;
  std::array<std::unique_ptr<ComboAttachment>,8> fxAttachments;
