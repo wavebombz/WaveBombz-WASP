@@ -23,10 +23,19 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel}){l->setFont(juce::Font(juce::FontOptions(14,juce::Font::bold)));l->setColour(juce::Label::textColourId,yellow);addAndMakeVisible(*l);}
  addKnob("OSC1MIX","OSC 1 MIX");addKnob("OSC2MIX","OSC 2 MIX");addKnob("OSC3MIX","OSC 3 MIX");
  const char* waveIds[]={"OSC1WAVE","OSC2WAVE","OSC3WAVE"};
+ const char* tuneIds[]={"OSC1TUNE","OSC2TUNE","OSC3TUNE"};
+ const char* octaveIds[]={"OSC1OCT","OSC2OCT","OSC3OCT"};
  for(size_t i=0;i<oscillatorWaveSelectors.size();++i){
-  auto& waveSelector=oscillatorWaveSelectors[i];sampleButtons[i].setButtonText("LOAD OSC "+juce::String((int)i+1)+" SAMPLE");waveSelector.addItem("SINE",1);waveSelector.addItem("SAW",2);waveSelector.addItem("SQUARE",3);waveSelector.addItem("PULSE",4);addAndMakeVisible(waveSelector);
+  const auto oscName="OSC "+juce::String((int)i+1);
+  auto& waveSelector=oscillatorWaveSelectors[i];sampleButtons[i].setButtonText("LOAD SAMPLE");waveSelector.addItem("SINE",1);waveSelector.addItem("SAW",2);waveSelector.addItem("SQUARE",3);waveSelector.addItem("PULSE",4);waveSelector.setTooltip(oscName+" waveform: choose the basic oscillator shape. A loaded sample takes priority until cleared.");addAndMakeVisible(waveSelector);
   oscillatorWaveAttachments[i]=std::make_unique<ComboAttachment>(processor.getState(),waveIds[i],waveSelector);
-  sampleButtons[i].setTooltip("Load an audio sample for this oscillator. Supported: WAV, AIFF, FLAC, OGG and MP3.");
+  auto& tune=oscillatorTuneSliders[i];tune.setSliderStyle(juce::Slider::LinearHorizontal);tune.setRange(-24.0,24.0,0.1);tune.setTextBoxStyle(juce::Slider::TextBoxRight,false,42,16);tune.setTooltip(oscName+" fine tune: adjusts pitch by semitones from -24 to +24; small changes detune the oscillator.");addAndMakeVisible(tune);
+  oscillatorTuneAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),tuneIds[i],tune);
+  oscillatorTuneLabels[i].setText("TUNE (st)",juce::dontSendNotification);oscillatorTuneLabels[i].setColour(juce::Label::textColourId,dim);oscillatorTuneLabels[i].setFont(juce::Font(juce::FontOptions(9.0f,juce::Font::bold)));oscillatorTuneLabels[i].setTooltip("Fine pitch adjustment in semitones.");addAndMakeVisible(oscillatorTuneLabels[i]);
+  auto& octave=oscillatorOctaveSelectors[i];octave.addItem("-2 OCT",1);octave.addItem("-1 OCT",2);octave.addItem("0 OCT",3);octave.addItem("+1 OCT",4);octave.addItem("+2 OCT",5);octave.setTooltip(oscName+" octave: transposes this oscillator by two octaves down/up in 12-semitone steps.");addAndMakeVisible(octave);
+  oscillatorOctaveAttachments[i]=std::make_unique<ComboAttachment>(processor.getState(),octaveIds[i],octave);
+  oscillatorOctaveLabels[i].setText("OCTAVE",juce::dontSendNotification);oscillatorOctaveLabels[i].setColour(juce::Label::textColourId,dim);oscillatorOctaveLabels[i].setFont(juce::Font(juce::FontOptions(9.0f,juce::Font::bold)));oscillatorOctaveLabels[i].setTooltip("Octave transpose: -2, -1, 0, +1 or +2 octaves.");addAndMakeVisible(oscillatorOctaveLabels[i]);
+  sampleButtons[i].setTooltip("Load an audio sample for this oscillator. Supported: WAV, AIFF, FLAC, OGG and MP3. Sample playback follows this oscillator's tune and octave settings.");
   sampleButtons[i].onClick=[this,i]{fileChooser=std::make_unique<juce::FileChooser>("Load sample for OSC "+juce::String((int)i+1),juce::File::getSpecialLocation(juce::File::userMusicDirectory),"*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3");fileChooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles,[this,i](const juce::FileChooser& fc){auto file=fc.getResult();if(file.existsAsFile()&&processor.loadOscillatorSample((int)i,file))sampleButtons[i].setButtonText(file.getFileNameWithoutExtension());});};
   addAndMakeVisible(sampleButtons[i]);
  }addKnob("CUTOFF","CUTOFF");addKnob("RESONANCE","RESONANCE");addKnob("DRIVE","DRIVE");
@@ -43,13 +52,13 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  const char* fxParamNames[]={"COMP THRESHOLD","DIST AMOUNT","LOW SHELF","HIGH SHELF","DELAY TIME","DELAY MIX","REVERB MIX","VOCODER MIX"};
  const float fxMin[]={-60,0,-12,-12,1,0,0,0},fxMax[]={0,1,12,12,1500,1,1,1};
  for(size_t i=0;i<fxControls.size();++i){fxControls[i]=std::make_unique<juce::Slider>();fxControls[i]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);fxControls[i]->setTextBoxStyle(juce::Slider::TextBoxBelow,false,70,16);fxControls[i]->setName(fxParamNames[i]);fxControls[i]->setRange(fxMin[i],fxMax[i],i==4?1:.1);addAndMakeVisible(*fxControls[i]);fxControlLabels[i].setText(fxParamNames[i],juce::dontSendNotification);fxControlLabels[i].setColour(juce::Label::textColourId,yellow);fxControlLabels[i].setFont(juce::Font(juce::FontOptions(10,juce::Font::bold)));fxControlLabels[i].setJustificationType(juce::Justification::centred);addAndMakeVisible(fxControlLabels[i]);fxControlAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),fxParamIds[i],*fxControls[i]);}
- meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);setFxPage(false);setSize(1080,850);startTimerHz(12);
+ meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);setFxPage(false);setSize(1080,900);startTimerHz(12);
 }
 WaveBombzWASPEditor::~WaveBombzWASPEditor(){stopTimer();setLookAndFeel(nullptr);}
 void WaveBombzWASPEditor::setFxPage(bool showFx){
  showFxPage=showFx;
  synthPageButton.setToggleState(!showFx,juce::dontSendNotification);fxPageButton.setToggleState(showFx,juce::dontSendNotification);
- for(auto& k:knobs)k->setVisible(!showFx);for(auto& s:oscillatorWaveSelectors)s.setVisible(!showFx);for(auto& b:sampleButtons)b.setVisible(!showFx);
+ for(auto& k:knobs)k->setVisible(!showFx);for(auto& s:oscillatorWaveSelectors)s.setVisible(!showFx);for(auto& b:sampleButtons)b.setVisible(!showFx);for(auto& s:oscillatorTuneSliders)s.setVisible(!showFx);for(auto& s:oscillatorOctaveSelectors)s.setVisible(!showFx);for(auto& l:oscillatorTuneLabels)l.setVisible(!showFx);for(auto& l:oscillatorOctaveLabels)l.setVisible(!showFx);
  for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel,&modTitle,&modDepthLabel})l->setVisible(!showFx);
  modSource.setVisible(!showFx);modTarget.setVisible(!showFx);modDepth.setVisible(!showFx);
  for(auto& s:fxSwitches)s->setVisible(showFx);for(auto& l:fxSwitchLabels)l.setVisible(showFx);
@@ -64,20 +73,20 @@ void WaveBombzWASPEditor::paint(juce::Graphics& g){
  g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(36,39,41),0,0,black,(float)getWidth(),(float)getHeight(),true));g.fillAll();g.setColour(yellow);g.fillRect(0,76,getWidth(),3);
  if(showFxPage){g.setColour(panel);g.fillRoundedRectangle(18.0f,94.0f,(float)getWidth()-36.0f,700.0f,12.0f);g.setColour(yellow);g.setFont(juce::Font(juce::FontOptions(18.0f,juce::Font::bold)));g.drawText("EFFECTS RACK  /  PROCESSING CHAIN",30,94,getWidth()-60,30,juce::Justification::centredLeft);g.setColour(yellow.withAlpha(.25f));g.fillRect(30,126,getWidth()-60,1);return;}
  auto box=[&](int x,int y,int w,int h){g.setColour(juce::Colours::black.withAlpha(.7f));g.fillRoundedRectangle((float)x+3,(float)y+4,(float)w,(float)h,9);g.setColour(panel);g.fillRoundedRectangle((float)x,(float)y,(float)w,(float)h,9);};
- box(18,92,305,180);box(335,92,305,180);box(18,286,620,180);box(652,92,410,374);box(18,535,1044,270);g.setColour(yellow);g.fillRect(18,485,1044,1);
+ box(18,92,305,213);box(335,92,305,213);box(18,310,620,180);box(652,92,410,374);box(18,535,1044,270);g.setColour(yellow);g.fillRect(18,505,1044,1);
  g.setColour(yellow.withAlpha(.13f));for(int i=0;i<28;++i)g.fillRect(20+i*35,670,20,2);
 }
 void WaveBombzWASPEditor::resized(){
  if (knobs.size() < 17) return;
- title.setBounds(22,8,350,40);subtitle.setBounds(24,47,500,20);synthPageButton.setBounds(365,18,76,30);fxPageButton.setBounds(445,18,58,30);factoryPreset.setBounds(515,20,145,28);savePresetButton.setBounds(666,20,100,28);loadPresetButton.setBounds(770,20,100,28);openBankButton.setBounds(874,20,100,28);voiceMode.setBounds(978,20,80,28);portamento.setBounds(885,52,170,20);oscLabel.setBounds(30,98,180,22);filterLabel.setBounds(348,98,220,22);envLabel.setBounds(30,292,220,22);lfoLabel.setBounds(665,98,250,22);
+ title.setBounds(22,8,350,40);subtitle.setBounds(24,47,500,20);synthPageButton.setBounds(365,18,76,30);fxPageButton.setBounds(445,18,58,30);factoryPreset.setBounds(515,20,145,28);savePresetButton.setBounds(666,20,100,28);loadPresetButton.setBounds(770,20,100,28);openBankButton.setBounds(874,20,100,28);voiceMode.setBounds(978,20,80,28);portamento.setBounds(885,52,170,20);oscLabel.setBounds(30,98,180,22);filterLabel.setBounds(348,98,220,22);envLabel.setBounds(30,316,220,22);lfoLabel.setBounds(665,98,250,22);
  auto place=[&](int i,int x,int y,int w=90,int h=100){knobs[(size_t)i]->setBounds(x,y,w,h);};
  place(0,35,125,90,82);place(1,125,125,90,82);place(2,215,125,90,82);
- for(size_t i=0;i<3;++i){oscillatorWaveSelectors[i].setBounds(32+(int)i*95,211,88,23);sampleButtons[i].setBounds(25+(int)i*95,239,98,24);}place(3,355,125);place(4,450,125);place(5,545,125);
- place(6,45,320,100);place(7,150,320,100);place(8,255,320,100);place(9,360,320,100);
+ for(size_t i=0;i<3;++i){int x=27+(int)i*98;oscillatorTuneLabels[i].setBounds(x+3,184,84,12);oscillatorTuneSliders[i].setBounds(x,196,91,20);oscillatorOctaveLabels[i].setBounds(x+3,216,84,12);oscillatorOctaveSelectors[i].setBounds(x,228,91,22);oscillatorWaveSelectors[i].setBounds(x,252,91,22);sampleButtons[i].setBounds(x,276,91,23);}place(3,355,125);place(4,450,125);place(5,545,125);
+ place(6,45,344,100);place(7,150,344,100);place(8,255,344,100);place(9,360,344,100);
  place(10,670,135);place(11,765,135);place(15,865,135);place(16,960,135);place(12,670,250);place(13,765,250);place(14,865,250);
  modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(35+col*255,541+row*34,150,18);fxSwitches[i]->setBounds(35+col*255,558+row*34,150,24);}
  for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(170+col*220,615+row*85,135,16);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
- meterText.setBounds(22,815,1030,28);
+ meterText.setBounds(22,865,1030,28);
  if(showFxPage){
    for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(42+col*258,125+row*32,170,20);fxSwitches[i]->setBounds(42+col*258,146+row*32,170,25);}
    for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(30+col*260,230+row*230,210,20);fxControls[i]->setBounds(70+col*260,255+row*230,130,125);}
