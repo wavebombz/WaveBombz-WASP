@@ -7,6 +7,13 @@ void WaspLookAndFeel::drawRotarySlider(juce::Graphics& g,int x,int y,int w,int h
  g.setColour(juce::Colour(95,99,102));g.drawEllipse(r,1.5f);float angle=start+pos*(end-start);juce::Path arc;arc.addCentredArc(cx,cy,size*.43f,size*.43f,0,start,angle,true);g.setColour(yellow);g.strokePath(arc,juce::PathStrokeType(3.5f));
  juce::Path pointer;pointer.addRoundedRectangle(-1.7f,-size*.34f,3.4f,size*.2f,1.5f);g.fillPath(pointer,juce::AffineTransform::rotation(angle).translated(cx,cy));g.setColour(juce::Colours::white.withAlpha(.08f));g.drawEllipse(r.reduced(5),1.0f);
 }
+void WaspLookAndFeel::drawButtonBackground(juce::Graphics& g,juce::Button& b,const juce::Colour&,bool highlighted,bool down){
+ auto r=b.getLocalBounds().toFloat().reduced(1.0f);auto base=b.getToggleState()?juce::Colour(255,190,0):juce::Colour(31,34,37);if(down)base=base.brighter(.18f);else if(highlighted)base=base.brighter(.10f);
+ g.setColour(juce::Colours::black.withAlpha(.8f));g.fillRoundedRectangle(r.translated(1.5f,2.5f),5.0f);g.setGradientFill(juce::ColourGradient(base.brighter(.16f),r.getX(),r.getY(),base.darker(.35f),r.getX(),r.getBottom(),false));g.fillRoundedRectangle(r,5.0f);g.setColour(juce::Colour(255,205,0).withAlpha(b.getToggleState()?.95f:.55f));g.drawRoundedRectangle(r,5.0f,1.0f);
+}
+void WaspLookAndFeel::drawButtonText(juce::Graphics& g,juce::TextButton& b,bool,bool){g.setColour(b.getToggleState()?juce::Colour(18,19,20):juce::Colour(238,239,240));g.setFont(juce::Font(juce::FontOptions(11.0f,juce::Font::bold)));g.drawFittedText(b.getButtonText(),b.getLocalBounds().reduced(4),juce::Justification::centred,1);}
+void WaspLookAndFeel::drawComboBox(juce::Graphics& g,int w,int h,bool,int,int,int,int,juce::ComboBox& box){auto r=juce::Rectangle<float>(0,0,(float)w,(float)h).reduced(1);g.setColour(juce::Colours::black.withAlpha(.7f));g.fillRoundedRectangle(r.translated(1,2),4);g.setGradientFill(juce::ColourGradient(juce::Colour(45,48,51),0,0,juce::Colour(15,17,19),0,(float)h,false));g.fillRoundedRectangle(r,4);g.setColour(juce::Colour(255,205,0).withAlpha(box.hasKeyboardFocus(true)?.95f:.48f));g.drawRoundedRectangle(r,4,1);juce::Path p;p.addTriangle((float)w-16,(float)h*.42f,(float)w-8,(float)h*.42f,(float)w-12,(float)h*.60f);g.setColour(juce::Colour(255,205,0));g.fillPath(p);}
+void WaspLookAndFeel::drawLinearSlider(juce::Graphics& g,int x,int y,int w,int h,float pos,float,float,juce::Slider& s){auto r=juce::Rectangle<float>((float)x,(float)y+(float)h*.40f,(float)w,juce::jmax(3.0f,(float)h*.20f));g.setColour(juce::Colour(7,8,9));g.fillRoundedRectangle(r,3);auto fill=r.withWidth(juce::jlimit(0.0f,r.getWidth(),pos-(float)x));g.setGradientFill(juce::ColourGradient(juce::Colour(255,220,70),fill.getX(),fill.getY(),juce::Colour(226,143,0),fill.getX(),fill.getBottom(),false));g.fillRoundedRectangle(fill,3);g.setColour(juce::Colour(255,205,0).withAlpha(.7f));g.drawRoundedRectangle(r,3,1);g.setColour(juce::Colour(255,245,190));g.fillRoundedRectangle(juce::Rectangle<float>(pos-4,(float)y+2,8,(float)h-4),2);}
 WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcessorEditor(&p),processor(p){
  setOpaque(true);setWantsKeyboardFocus(false);setLookAndFeel(&look);
  synthPageButton.onClick=[this]{setFxPage(false);}; fxPageButton.onClick=[this]{setFxPage(true);};
@@ -70,11 +77,24 @@ void WaveBombzWASPEditor::addKnob(const juce::String& id,const juce::String& lab
  attachments.push_back(std::make_unique<SliderAttachment>(processor.getState(),id,*s));knobs.push_back(std::move(s));
 }
 void WaveBombzWASPEditor::paint(juce::Graphics& g){
- g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(36,39,41),0,0,black,(float)getWidth(),(float)getHeight(),true));g.fillAll();g.setColour(yellow);g.fillRect(0,76,getWidth(),3);
- if(showFxPage){g.setColour(panel);g.fillRoundedRectangle(18.0f,94.0f,(float)getWidth()-36.0f,700.0f,12.0f);g.setColour(yellow);g.setFont(juce::Font(juce::FontOptions(18.0f,juce::Font::bold)));g.drawText("EFFECTS RACK  /  PROCESSING CHAIN",30,94,getWidth()-60,30,juce::Justification::centredLeft);g.setColour(yellow.withAlpha(.25f));g.fillRect(30,126,getWidth()-60,1);return;}
- auto box=[&](int x,int y,int w,int h){g.setColour(juce::Colours::black.withAlpha(.7f));g.fillRoundedRectangle((float)x+3,(float)y+4,(float)w,(float)h,9);g.setColour(panel);g.fillRoundedRectangle((float)x,(float)y,(float)w,(float)h,9);};
- box(18,92,305,213);box(335,92,305,213);box(18,310,620,180);box(652,92,410,374);box(18,535,1044,270);g.setColour(yellow);g.fillRect(18,505,1044,1);
- g.setColour(yellow.withAlpha(.13f));for(int i=0;i<28;++i)g.fillRect(20+i*35,670,20,2);
+ const auto W=(float)getWidth(),H=(float)getHeight();g.fillAll(black);
+ g.setGradientFill(juce::ColourGradient(juce::Colour(39,41,43),0,0,juce::Colour(8,9,10),W,H,true));g.fillAll();
+ // Brushed-metal header and restrained honeycomb-inspired detail.
+ g.setGradientFill(juce::ColourGradient(juce::Colour(34,36,38),0,0,juce::Colour(10,11,12),W,74,false));g.fillRect(0,0,W,76);
+ g.setColour(yellow.withAlpha(.9f));g.fillRect(0,75,W,2);g.setColour(yellow.withAlpha(.07f));for(int i=0;i<36;++i){float xx=(float)i*31.0f;g.drawLine(xx,0,xx+22,74,1.0f);}
+ g.setColour(juce::Colour(255,205,0).withAlpha(.22f));g.drawRect(1,1,getWidth()-2,getHeight()-2,1);
+ auto box=[&](int x,int y,int w,int h,const juce::String& name){auto r=juce::Rectangle<float>((float)x,(float)y,(float)w,(float)h);g.setColour(juce::Colours::black.withAlpha(.78f));g.fillRoundedRectangle(r.translated(2,4),8);g.setGradientFill(juce::ColourGradient(juce::Colour(35,38,40),r.getX(),r.getY(),juce::Colour(15,17,18),r.getRight(),r.getBottom(),false));g.fillRoundedRectangle(r,8);g.setColour(yellow.withAlpha(.72f));g.drawRoundedRectangle(r,8,1.1f);g.setColour(yellow.withAlpha(.11f));g.fillRoundedRectangle(r.getX()+1,r.getY()+1,r.getWidth()-2,25,7);g.setColour(yellow);g.fillRect(r.getX()+10,r.getY()+8,3,12);};
+ if(showFxPage){
+   box(18,92,getWidth()-36,700,"FX");g.setColour(yellow);g.setFont(juce::Font(juce::FontOptions(18.0f,juce::Font::bold)));g.drawText("EFFECTS RACK  /  PROCESSING CHAIN",38,97,getWidth()-76,24,juce::Justification::centredLeft);g.setColour(yellow.withAlpha(.28f));g.fillRect(35,126,getWidth()-70,1);
+   const juce::Colour fxColours[]={juce::Colour(255,153,32),juce::Colour(55,155,255),juce::Colour(65,220,170),juce::Colour(190,95,255)};
+   for(int i=0;i<4;++i){float xx=34.0f+i*258.0f;g.setColour(fxColours[i].withAlpha(.10f));g.fillRoundedRectangle(xx,202,238,10,4);g.setColour(fxColours[i].withAlpha(.7f));g.fillRect(xx,202,238,2);}
+   return;
+ }
+ box(18,92,305,213,"OSC 1");box(335,92,305,213,"OSC 2");box(18,310,620,180,"FILTER");box(652,92,410,374,"MODULATION");box(18,535,1044,270,"MASTER");
+ // Accent rails and subtle technical grid keep the dark interface readable.
+ g.setColour(yellow.withAlpha(.7f));g.fillRect(18,92,305,2);g.fillRect(335,92,305,2);g.fillRect(18,310,620,2);g.fillRect(652,92,410,2);g.fillRect(18,535,1044,2);g.fillRect(18,505,1044,1);
+ g.setColour(juce::Colour(255,205,0).withAlpha(.07f));for(int i=0;i<29;++i)g.fillRect(22+i*36,670,20,2);
+ g.setColour(juce::Colour(255,255,255).withAlpha(.025f));for(int y=90;y<H;y+=5)g.fillRect(0,(float)y,W,1);
 }
 void WaveBombzWASPEditor::resized(){
  if (knobs.size() < 17) return;
