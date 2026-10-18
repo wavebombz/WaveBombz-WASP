@@ -8,7 +8,9 @@ void WaspLookAndFeel::drawRotarySlider(juce::Graphics& g,int x,int y,int w,int h
  juce::Path pointer;pointer.addRoundedRectangle(-1.7f,-size*.34f,3.4f,size*.2f,1.5f);g.fillPath(pointer,juce::AffineTransform::rotation(angle).translated(cx,cy));g.setColour(juce::Colours::white.withAlpha(.08f));g.drawEllipse(r.reduced(5),1.0f);
 }
 WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcessorEditor(&p),processor(p){
- setOpaque(true);setWantsKeyboardFocus(false);
+ setOpaque(true);setWantsKeyboardFocus(false);setLookAndFeel(&look);
+ synthPageButton.onClick=[this]{setFxPage(false);}; fxPageButton.onClick=[this]{setFxPage(true);};
+ for(auto* b:{&synthPageButton,&fxPageButton}){b->setColour(juce::TextButton::buttonColourId,juce::Colour(42,45,48));b->setColour(juce::TextButton::buttonOnColourId,yellow);b->setColour(juce::TextButton::textColourOff,yellow);b->setColour(juce::TextButton::textColourOn,black);addAndMakeVisible(*b);}
  title.setText("WaveBombz WASP",juce::dontSendNotification);title.setFont(juce::Font(juce::FontOptions(30.0f,juce::Font::bold)));title.setColour(juce::Label::textColourId,yellow);addAndMakeVisible(title);
  factoryPreset.addItem("Acid Bite",1);factoryPreset.addItem("Neon Pulse",2);factoryPreset.addItem("Brass Stab",3);factoryPreset.addItem("Deep Sub",4);factoryPreset.addItem("Wasp Lead",5);factoryPreset.addItem("Tech Pluck",6);factoryPreset.addItem("Dark Drone",7);factoryPreset.addItem("Retro Bass",8);factoryPreset.setSelectedId(1);factoryPreset.onChange=[this]{int id=factoryPreset.getSelectedId();if(id>=1&&id<=8)processor.loadFactoryPreset(id-1);else if(id>=9&&(size_t)(id-9)<bankFiles.size())processor.loadPreset(bankFiles[(size_t)(id-9)]);};addAndMakeVisible(factoryPreset);
  savePresetButton.onClick=[this]{fileChooser=std::make_unique<juce::FileChooser>("Save WaveBombz WASP preset",juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("WaveBombz-Preset.wasp"),"*.wasp");fileChooser->launchAsync(juce::FileBrowserComponent::saveMode|juce::FileBrowserComponent::canSelectFiles,[this](const juce::FileChooser& fc){auto f=fc.getResult();if(f!=juce::File{}){if(f.getFileExtension().isEmpty())f=f.withFileExtension(".wasp");processor.savePreset(f);}});};addAndMakeVisible(savePresetButton);
@@ -33,9 +35,18 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  const char* fxParamNames[]={"COMP THRESHOLD","DIST AMOUNT","LOW SHELF","HIGH SHELF","DELAY TIME","DELAY MIX","REVERB MIX","VOCODER MIX"};
  const float fxMin[]={-60,0,-12,-12,1,0,0,0},fxMax[]={0,1,12,12,1500,1,1,1};
  for(size_t i=0;i<fxControls.size();++i){fxControls[i]=std::make_unique<juce::Slider>();fxControls[i]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);fxControls[i]->setTextBoxStyle(juce::Slider::TextBoxBelow,false,70,16);fxControls[i]->setName(fxParamNames[i]);fxControls[i]->setRange(fxMin[i],fxMax[i],i==4?1:.1);addAndMakeVisible(*fxControls[i]);fxControlLabels[i].setText(fxParamNames[i],juce::dontSendNotification);fxControlLabels[i].setColour(juce::Label::textColourId,yellow);fxControlLabels[i].setFont(juce::Font(juce::FontOptions(10,juce::Font::bold)));fxControlLabels[i].setJustificationType(juce::Justification::centred);addAndMakeVisible(fxControlLabels[i]);fxControlAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),fxParamIds[i],*fxControls[i]);}
- meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);setSize(1080,850);startTimerHz(12);
+ meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);setFxPage(false);setSize(1080,850);startTimerHz(12);
 }
 WaveBombzWASPEditor::~WaveBombzWASPEditor(){stopTimer();setLookAndFeel(nullptr);}
+void WaveBombzWASPEditor::setFxPage(bool showFx){
+ showFxPage=showFx;
+ synthPageButton.setToggleState(!showFx,juce::dontSendNotification);fxPageButton.setToggleState(showFx,juce::dontSendNotification);
+ for(auto& k:knobs)k->setVisible(!showFx);
+ for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel,&modTitle,&modSource,&modTarget,&modDepth,&modDepthLabel})l->setVisible(!showFx);
+ for(auto& s:fxSwitches)s->setVisible(showFx);for(auto& l:fxSwitchLabels)l.setVisible(showFx);
+ for(auto& s:fxControls)s->setVisible(showFx);for(auto& l:fxControlLabels)l.setVisible(showFx);
+ resized();repaint();
+}
 void WaveBombzWASPEditor::addKnob(const juce::String& id,const juce::String& label){
  auto s=std::make_unique<juce::Slider>();s->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);s->setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,18);s->setName(label);s->setTooltip(label+" — right-click to edit value");addAndMakeVisible(*s);
  attachments.push_back(std::make_unique<SliderAttachment>(processor.getState(),id,*s));knobs.push_back(std::move(s));
@@ -48,7 +59,7 @@ void WaveBombzWASPEditor::paint(juce::Graphics& g){
 }
 void WaveBombzWASPEditor::resized(){
  if (knobs.size() < 17) return;
- title.setBounds(22,12,430,40);subtitle.setBounds(24,50,500,20);factoryPreset.setBounds(480,20,150,28);savePresetButton.setBounds(642,20,105,28);loadPresetButton.setBounds(752,20,105,28);openBankButton.setBounds(862,20,105,28);voiceMode.setBounds(972,20,85,28);portamento.setBounds(885,52,170,20);oscLabel.setBounds(30,98,180,22);filterLabel.setBounds(348,98,220,22);envLabel.setBounds(30,292,220,22);lfoLabel.setBounds(665,98,250,22);
+ title.setBounds(22,8,350,40);subtitle.setBounds(24,47,500,20);synthPageButton.setBounds(365,18,76,30);fxPageButton.setBounds(445,18,58,30);factoryPreset.setBounds(515,20,145,28);savePresetButton.setBounds(666,20,100,28);loadPresetButton.setBounds(770,20,100,28);openBankButton.setBounds(874,20,100,28);voiceMode.setBounds(978,20,80,28);portamento.setBounds(885,52,170,20);oscLabel.setBounds(30,98,180,22);filterLabel.setBounds(348,98,220,22);envLabel.setBounds(30,292,220,22);lfoLabel.setBounds(665,98,250,22);
  auto place=[&](int i,int x,int y,int w=90,int h=100){knobs[(size_t)i]->setBounds(x,y,w,h);};
  place(0,35,125);place(1,125,125);place(2,215,125);place(3,355,125);place(4,450,125);place(5,545,125);
  place(6,45,320,100);place(7,150,320,100);place(8,255,320,100);place(9,360,320,100);
@@ -56,5 +67,10 @@ void WaveBombzWASPEditor::resized(){
  modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(35+col*255,541+row*34,150,18);fxSwitches[i]->setBounds(35+col*255,558+row*34,150,24);}
  for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(170+col*220,615+row*85,135,16);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
  meterText.setBounds(22,815,1030,28);
+ if(showFxPage){
+   for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(42+col*258,125+row*32,170,20);fxSwitches[i]->setBounds(42+col*258,146+row*32,170,25);}
+   for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(30+col*260,230+row*230,210,20);fxControls[i]->setBounds(70+col*260,255+row*230,130,125);}
+   meterText.setBounds(22,815,1030,28);
+ }
 }
 void WaveBombzWASPEditor::timerCallback(){float pk=processor.getPeak();meterText.setText("MOMENTARY LOUDNESS  "+juce::String(processor.getMomentaryLUFS(),1)+" LUFS     INTEGRATED LOUDNESS  "+juce::String(processor.getIntegratedLUFS(),1)+" LUFS     PEAK  "+(pk>0?juce::String(juce::Decibels::gainToDecibels(pk),1):juce::String("-inf"))+" dBFS",juce::dontSendNotification);}
