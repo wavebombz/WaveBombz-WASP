@@ -77,24 +77,27 @@ void WaveBombzWASPEditor::addKnob(const juce::String& id,const juce::String& lab
  attachments.push_back(std::make_unique<SliderAttachment>(processor.getState(),id,*s));knobs.push_back(std::move(s));
 }
 void WaveBombzWASPEditor::paint(juce::Graphics& g){
- const auto W=(float)getWidth(),H=(float)getHeight();g.fillAll(black);
- g.setGradientFill(juce::ColourGradient(juce::Colour(39,41,43),0,0,juce::Colour(8,9,10),W,H,true));g.fillAll();
- // Brushed-metal header and restrained honeycomb-inspired detail.
- g.setGradientFill(juce::ColourGradient(juce::Colour(34,36,38),0,0,juce::Colour(10,11,12),W,74,false));g.fillRect(0,0,W,76);
- g.setColour(yellow.withAlpha(.9f));g.fillRect(0,75,W,2);g.setColour(yellow.withAlpha(.07f));for(int i=0;i<36;++i){float xx=(float)i*31.0f;g.drawLine(xx,0,xx+22,74,1.0f);}
+ const float W=(float)getWidth(),H=(float)getHeight();const float sx=W/1200.0f,sy=H/800.0f;
+ auto X=[&](float v){return v*sx;};auto Y=[&](float v){return v*sy;};
+ g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(39,41,43),0,0,juce::Colour(8,9,10),W,H,true));g.fillAll();
+ g.setGradientFill(juce::ColourGradient(juce::Colour(34,36,38),0,0,juce::Colour(10,11,12),W,Y(72),false));g.fillRect(0,0,W,Y(72));
+ g.setColour(yellow.withAlpha(.9f));g.fillRect(0,Y(71),W,Y(2));
+ g.setColour(yellow.withAlpha(.07f));for(int i=0;i<42;++i){float xx=X((float)i*30);g.drawLine(xx,0,xx+X(20),Y(72),1.0f);}
  g.setColour(juce::Colour(255,205,0).withAlpha(.22f));g.drawRect(1,1,getWidth()-2,getHeight()-2,1);
- auto box=[&](int x,int y,int w,int h,const juce::String& name){auto r=juce::Rectangle<float>((float)x,(float)y,(float)w,(float)h);g.setColour(juce::Colours::black.withAlpha(.78f));g.fillRoundedRectangle(r.translated(2,4),8);g.setGradientFill(juce::ColourGradient(juce::Colour(35,38,40),r.getX(),r.getY(),juce::Colour(15,17,18),r.getRight(),r.getBottom(),false));g.fillRoundedRectangle(r,8);g.setColour(yellow.withAlpha(.72f));g.drawRoundedRectangle(r,8,1.1f);g.setColour(yellow.withAlpha(.11f));g.fillRoundedRectangle(r.getX()+1,r.getY()+1,r.getWidth()-2,25,7);g.setColour(yellow);g.fillRect(r.getX()+10,r.getY()+8,3,12);};
+ auto box=[&](float x,float y,float w,float h,const juce::String& name){auto r=juce::Rectangle<float>(X(x),Y(y),X(w),Y(h));g.setColour(juce::Colours::black.withAlpha(.78f));g.fillRoundedRectangle(r.translated(X(2),Y(3)),8);g.setGradientFill(juce::ColourGradient(juce::Colour(35,38,40),r.getX(),r.getY(),juce::Colour(15,17,18),r.getRight(),r.getBottom(),false));g.fillRoundedRectangle(r,8);g.setColour(yellow.withAlpha(.72f));g.drawRoundedRectangle(r,8,1.1f);g.setColour(yellow.withAlpha(.11f));g.fillRoundedRectangle(r.getX()+1,r.getY()+1,r.getWidth()-2,Y(22),7);g.setColour(yellow);g.fillRect(r.getX()+X(9),r.getY()+Y(7),X(3),Y(12));g.setFont(juce::Font(juce::FontOptions(12.0f*sx,juce::Font::bold)));g.drawText(name,(int)(r.getX()+X(18)),(int)(r.getY()+Y(2)),(int)(r.getWidth()-X(25)),(int)Y(20),juce::Justification::centredLeft);};
  if(showFxPage){
-   box(18,92,getWidth()-36,700,"FX");g.setColour(yellow);g.setFont(juce::Font(juce::FontOptions(18.0f,juce::Font::bold)));g.drawText("EFFECTS RACK  /  PROCESSING CHAIN",38,97,getWidth()-76,24,juce::Justification::centredLeft);g.setColour(yellow.withAlpha(.28f));g.fillRect(35,126,getWidth()-70,1);
+   box(18,91,1164,670,"FX RACK");g.setColour(yellow);g.setFont(juce::Font(juce::FontOptions(18.0f*sx,juce::Font::bold)));g.drawText("EFFECTS RACK  /  PROCESSING CHAIN",(int)X(38),(int)Y(98),(int)X(1100),(int)Y(25),juce::Justification::centredLeft);
    const juce::Colour fxColours[]={juce::Colour(255,153,32),juce::Colour(55,155,255),juce::Colour(65,220,170),juce::Colour(190,95,255)};
-   for(int i=0;i<4;++i){float xx=34.0f+i*258.0f;g.setColour(fxColours[i].withAlpha(.10f));g.fillRoundedRectangle(xx,202,238,10,4);g.setColour(fxColours[i].withAlpha(.7f));g.fillRect(xx,202,238,2);}
+   for(int i=0;i<4;++i){float xx=X(32+i*286.0f);g.setColour(fxColours[i].withAlpha(.10f));g.fillRoundedRectangle(xx,Y(224),X(260),Y(8),4);g.setColour(fxColours[i].withAlpha(.8f));g.fillRect(xx,Y(224),X(260),Y(2));}
    return;
  }
- box(18,92,305,213,"OSC 1");box(335,92,305,213,"OSC 2");box(18,310,620,180,"FILTER");box(652,92,410,374,"MODULATION");box(18,535,1044,270,"MASTER");
- // Accent rails and subtle technical grid keep the dark interface readable.
- g.setColour(yellow.withAlpha(.7f));g.fillRect(18,92,305,2);g.fillRect(335,92,305,2);g.fillRect(18,310,620,2);g.fillRect(652,92,410,2);g.fillRect(18,535,1044,2);g.fillRect(18,505,1044,1);
- g.setColour(juce::Colour(255,205,0).withAlpha(.07f));for(int i=0;i<29;++i)g.fillRect(22+i*36,670,20,2);
- g.setColour(juce::Colour(255,255,255).withAlpha(.025f));for(int y=90;y<H;y+=5)g.fillRect(0,(float)y,W,1);
+ box(18,88,376,252,"OSC 1");box(412,88,376,252,"OSC 2");box(806,88,376,252,"OSC 3");
+ box(18,350,376,185,"FILTER / DRIVE");box(412,350,376,185,"AMP ENVELOPE");box(806,350,376,185,"LFO / MODULATION");
+ box(18,545,1164,205,"FX CHAIN / GLOBAL");
+ // Metallic panel rails, subtle grid and honeycomb-inspired technical texture.
+ g.setColour(yellow.withAlpha(.7f));for(float x:{18.0f,412.0f,806.0f})g.fillRect(X(x),Y(88),X(376),Y(2));
+ g.setColour(yellow.withAlpha(.08f));for(int i=0;i<36;++i){float xx=X(20+i*33.0f);g.drawLine(xx,Y(610),xx+X(18),Y(650),1.0f);}
+ g.setColour(juce::Colour(255,255,255).withAlpha(.025f));for(int y=90;y<780;y+=5)g.fillRect(0,Y((float)y),W,Y(1));
 }
 void WaveBombzWASPEditor::resized(){
  if (knobs.size() < 17) return;
