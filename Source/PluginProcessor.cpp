@@ -66,7 +66,7 @@ void WaveBombzWASPProcessor::prepareToPlay(double sr,int){
  eqLow.clear();eqHigh.clear();eqLow.resize((size_t)getTotalNumOutputChannels());eqHigh.resize((size_t)getTotalNumOutputChannels());
  juce::dsp::ProcessSpec spec{sr,512,(juce::uint32)getTotalNumOutputChannels()};
  compressor.prepare(spec);compressor.setThreshold(-18.0f);compressor.setRatio(3.0f);compressor.setAttack(10.0f);compressor.setRelease(100.0f);
- reverb.prepare(spec);flanger.prepare(spec);chorus.prepare(spec);phaser.prepare(spec);delay.prepare(spec);delay.setMaximumDelayInSamples((int)sr*2);delay.setDelay(sr*.36);
+ reverb.prepare(spec);flanger.prepare(spec);chorus.prepare(spec);phaser.prepare(spec);delay.prepare(spec);delay.setMaximumDelayInSamples((int)sr*2);delay.setDelay((float)(sr*.36));
  flanger.setCentreDelay(2.0f);flanger.setDepth(.35f);flanger.setRate(.25f);flanger.setFeedback(.1f);flanger.setMix(.5f);
  chorus.setCentreDelay(10.0f);chorus.setDepth(.2f);chorus.setRate(.8f);chorus.setMix(.5f);
  phaser.setRate(.25f);phaser.setDepth(.5f);phaser.setCentreFrequency(1000.0f);phaser.setFeedback(.2f);phaser.setMix(.5f);
@@ -131,5 +131,5 @@ bool WaveBombzWASPProcessor::loadPreset(const juce::File& file){
 }
 void WaveBombzWASPProcessor::getStateInformation(juce::MemoryBlock& d){auto s=apvts.copyState();std::unique_ptr<juce::XmlElement>x(s.createXml());copyXmlToBinary(*x,d);}
 void WaveBombzWASPProcessor::setStateInformation(const void* d,int n){std::unique_ptr<juce::XmlElement>x(getXmlFromBinary(d,n));if(x&&x->hasTagName(apvts.state.getType()))apvts.replaceState(juce::ValueTree::fromXml(*x));}
-juce::AudioProcessorValueTreeState& WaveBombzWASPProcessor::getState(){return apvts;}float WaveBombzWASPProcessor::getMomentaryLUFS()const{return momentary.load();}float WaveBombzWASPProcessor::getIntegratedLUFS()const{return integrated.load();}float WaveBombzWASPProcessor::getPeak()const{return peak.exchange(0.0f);}
+juce::AudioProcessorValueTreeState& WaveBombzWASPProcessor::getState(){return apvts;}float WaveBombzWASPProcessor::getMomentaryLUFS()const{return momentary.load();}float WaveBombzWASPProcessor::getIntegratedLUFS()const{return integrated.load();}float WaveBombzWASPProcessor::getPeak(){return peak.exchange(0.0f);}
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){return new WaveBombzWASPProcessor();}
