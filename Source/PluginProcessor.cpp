@@ -19,7 +19,7 @@ public:
   fenv.setParameters({v("FATTACK",.01f),v("FDECAY",.2f),v("FSUSTAIN",.6f),v("FRELEASE",.3f)});
   const int s1=(int)v("OSC1WAVE",1),s2=(int)v("OSC2WAVE",0),s3=(int)v("OSC3WAVE",2);
   const float m1=v("OSC1MIX",.8f),m2=v("OSC2MIX",.45f),m3=v("OSC3MIX",.25f);
-  const float analog=v("ANALOG",0.25f),digital=v("DIGITALEDGE",0.0f); const float t2=std::pow(2.0f,v("OSC2TUNE")/12.0f+analog*0.006f),t3=std::pow(2.0f,v("OSC3TUNE",12)/12.0f-analog*0.009f);
+  const float analog=v("ANALOG",0.25f),digital=v("DIGITALEDGE",0.0f); const float t1=std::pow(2.0f,(v("OSC1TUNE")+12.0f*v("OSC1OCT",2)-0.0f)/12.0f),t2=std::pow(2.0f,(v("OSC2TUNE")+12.0f*(v("OSC2OCT",2)-2.0f))/12.0f+analog*0.006f),t3=std::pow(2.0f,(v("OSC3TUNE",12)+12.0f*(v("OSC3OCT",3)-2.0f))/12.0f-analog*0.009f);
   const float fm=juce::jlimit(0.0f,1.0f,v("FM")+digital*0.35f),ring=juce::jlimit(0.0f,1.0f,v("RING")+digital*0.3f),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");
   const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
@@ -28,10 +28,10 @@ public:
    float glide=state.getRawParameterValue("PORTAMENTO")->load();if(glide>0.001f)hz+=(targetHz-hz)*juce::jlimit(0.00001f,0.02f,1.0f/(glide*1200.0f));else hz=targetHz;
    float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
    lfoPhase+=2*pi*lrate/sr;if(lfoPhase>2*pi)lfoPhase-=2*pi;
-   auto sampleValue=[&](int slot){const auto& sm=samples[(size_t)slot];if(!sm||sm->getNumSamples()<2)return wave(slot==0?s1:(slot==1?s2:s3),phase[(size_t)slot]);double pos=samplePositions[(size_t)slot];int idx=(int)pos;if(idx<0||idx>=sm->getNumSamples())return 0.0f;int next=juce::jmin(idx+1,sm->getNumSamples()-1);float frac=(float)(pos-idx);float value=sm->getSample(0,idx)+(sm->getSample(0,next)-sm->getSample(0,idx))*frac;double sourceRate=sampleRates[(size_t)slot].load();double pitch=std::pow(2.0,(double)(midiNote-60)/12.0);samplePositions[(size_t)slot]+=sourceRate/rate*pitch;return value;};
+   auto sampleValue=[&](int slot){const auto& sm=samples[(size_t)slot];if(!sm||sm->getNumSamples()<2)return wave(slot==0?s1:(slot==1?s2:s3),phase[(size_t)slot]);double pos=samplePositions[(size_t)slot];int idx=(int)pos;if(idx<0||idx>=sm->getNumSamples())return 0.0f;int next=juce::jmin(idx+1,sm->getNumSamples()-1);float frac=(float)(pos-idx);float value=sm->getSample(0,idx)+(sm->getSample(0,next)-sm->getSample(0,idx))*frac;double sourceRate=sampleRates[(size_t)slot].load();const char* tuneIds[]={"OSC1TUNE","OSC2TUNE","OSC3TUNE"};const char* octaveIds[]={"OSC1OCT","OSC2OCT","OSC3OCT"};double tune=v(tuneIds[slot]);double octave=(v(octaveIds[slot],2.0f)-2.0)*12.0;double pitch=std::pow(2.0,((double)(midiNote-60)+tune+octave)/12.0);samplePositions[(size_t)slot]+=sourceRate/rate*pitch;return value;};
    float a=sampleValue(0),b=sampleValue(1),c=sampleValue(2);
    const float route=(modSource==0?fe:lfo)*modDepth;
-   phase[0]+=2*pi*hz/sr;phase[1]+=2*pi*hz*t2/sr;phase[2]+=2*pi*hz*t3/sr;for(auto& q:phase)if(q>2*pi)q-=2*pi;
+   phase[0]+=2*pi*hz*t1/sr;phase[1]+=2*pi*hz*t2/sr;phase[2]+=2*pi*hz*t3/sr;for(auto& q:phase)if(q>2*pi)q-=2*pi;
    float x=(a*juce::jlimit(0.0f,1.0f,m1+(modTarget==1?route:0.0f))+b*juce::jlimit(0.0f,1.0f,m2+(modTarget==2?route:0.0f))+c*m3)*(1-ring)+(a*b)*ring; x=std::tanh(x*(1.0f+analog*0.18f));
    float routeCut=(modTarget==0?route:0.0f); float fc=juce::jlimit(25.0f,18000.0f,v("CUTOFF",8000)*std::pow(2.0f,(fe*ec+lfo*lc+lfo*lamt+routeCut)*4));
    filter+=(1-std::exp(-2*pi*fc/sr))*(x-filter);x=std::tanh(filter*drive*2)*env*vel*.22f;
@@ -53,7 +53,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout WaveBombzWASPProcessor::crea
  auto f=[&](const char* id,const char* name,float lo,float hi,float d){p.add(std::make_unique<F>(id,name,juce::NormalisableRange<float>(lo,hi,0.001f),d));};
  auto c=[&](const char* id,const char* name,juce::StringArray a,int d){p.add(std::make_unique<C>(id,name,a,d));};
  c("OSC1WAVE","OSC 1 Wave",{"Sine","Saw","Square","Pulse"},1);c("OSC2WAVE","OSC 2 Wave",{"Sine","Saw","Square","Pulse"},0);c("OSC3WAVE","OSC 3 Wave",{"Sine","Saw","Square","Pulse"},2);
- f("OSC1MIX","OSC 1 Mix",0,1,.8f);f("OSC2MIX","OSC 2 Mix",0,1,.45f);f("OSC3MIX","OSC 3 Mix",0,1,.25f);f("OSC2TUNE","OSC 2 Tune",-24,24,0);f("OSC3TUNE","OSC 3 Tune",-24,24,12);
+ f("OSC1MIX","OSC 1 Mix",0,1,.8f);f("OSC2MIX","OSC 2 Mix",0,1,.45f);f("OSC3MIX","OSC 3 Mix",0,1,.25f);f("OSC1TUNE","OSC 1 Fine Tune",-24,24,0);f("OSC2TUNE","OSC 2 Fine Tune",-24,24,0);f("OSC3TUNE","OSC 3 Fine Tune",-24,24,12);c("OSC1OCT","OSC 1 Octave",{"-2 oct","-1 oct","0 oct","+1 oct","+2 oct"},2);c("OSC2OCT","OSC 2 Octave",{"-2 oct","-1 oct","0 oct","+1 oct","+2 oct"},2);c("OSC3OCT","OSC 3 Octave",{"-2 oct","-1 oct","0 oct","+1 oct","+2 oct"},3);
  f("CUTOFF","Filter Cutoff",25,18000,8000);f("RESONANCE","Resonance",0,1,.1f);
  f("ATTACK","Amp Attack",.001f,5,.01f);f("DECAY","Amp Decay",.001f,5,.18f);f("SUSTAIN","Amp Sustain",0,1,.8f);f("RELEASE","Amp Release",.001f,8,.25f);
  f("FATTACK","Filter Attack",.001f,5,.01f);f("FDECAY","Filter Decay",.001f,5,.2f);f("FSUSTAIN","Filter Sustain",0,1,.6f);f("FRELEASE","Filter Release",.001f,8,.3f);
