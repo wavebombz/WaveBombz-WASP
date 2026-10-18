@@ -24,7 +24,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  addKnob("OSC1MIX","OSC 1 MIX");addKnob("OSC2MIX","OSC 2 MIX");addKnob("OSC3MIX","OSC 3 MIX");
  const char* waveIds[]={"OSC1WAVE","OSC2WAVE","OSC3WAVE"};
  for(size_t i=0;i<oscillatorWaveSelectors.size();++i){
-  auto& waveSelector=oscillatorWaveSelectors[i];waveSelector.addItem("SINE",1);waveSelector.addItem("SAW",2);waveSelector.addItem("SQUARE",3);waveSelector.addItem("PULSE",4);addAndMakeVisible(waveSelector);
+  auto& waveSelector=oscillatorWaveSelectors[i];sampleButtons[i].setButtonText("LOAD OSC "+juce::String((int)i+1)+" SAMPLE");waveSelector.addItem("SINE",1);waveSelector.addItem("SAW",2);waveSelector.addItem("SQUARE",3);waveSelector.addItem("PULSE",4);addAndMakeVisible(waveSelector);
   oscillatorWaveAttachments[i]=std::make_unique<ComboAttachment>(processor.getState(),waveIds[i],waveSelector);
   sampleButtons[i].setTooltip("Load an audio sample for this oscillator. Supported: WAV, AIFF, FLAC, OGG and MP3.");
   sampleButtons[i].onClick=[this,i]{fileChooser=std::make_unique<juce::FileChooser>("Load sample for OSC "+juce::String((int)i+1),juce::File::getSpecialLocation(juce::File::userMusicDirectory),"*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3");fileChooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles,[this,i](const juce::FileChooser& fc){auto file=fc.getResult();if(file.existsAsFile()&&processor.loadOscillatorSample((int)i,file))sampleButtons[i].setButtonText(file.getFileNameWithoutExtension());});};
