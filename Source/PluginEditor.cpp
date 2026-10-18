@@ -2,13 +2,13 @@
 namespace {const juce::Colour black(13,15,17),panel(25,28,31),yellow(255,205,0),dim(150,153,155);}
 WaspLookAndFeel::WaspLookAndFeel(){setColour(juce::Slider::textBoxTextColourId,yellow);setColour(juce::Slider::textBoxOutlineColourId,juce::Colours::transparentBlack);setColour(juce::Label::textColourId,yellow);}
 void WaspLookAndFeel::drawRotarySlider(juce::Graphics& g,int x,int y,int w,int h,float pos,float start,float end,juce::Slider&){
- float size=(float)juce::jmin(w,h)-14,cx=x+w*.5f,cy=y+h*.5f;auto r=juce::Rectangle<float>(cx-size*.5f,cy-size*.5f,size,size);
+ float size=(float)juce::jmax(1,juce::jmin(w,h)-14),cx=x+w*.5f,cy=y+h*.5f;auto r=juce::Rectangle<float>(cx-size*.5f,cy-size*.5f,size,size);
  g.setColour(juce::Colours::black);g.fillEllipse(r.translated(2,4));g.setGradientFill(juce::ColourGradient(juce::Colour(76,79,82),r.getX(),r.getY(),juce::Colour(18,20,22),r.getRight(),r.getBottom(),false));g.fillEllipse(r);
  g.setColour(juce::Colour(95,99,102));g.drawEllipse(r,1.5f);float angle=start+pos*(end-start);juce::Path arc;arc.addCentredArc(cx,cy,size*.43f,size*.43f,0,start,angle,true);g.setColour(yellow);g.strokePath(arc,juce::PathStrokeType(3.5f));
  juce::Path pointer;pointer.addRoundedRectangle(-1.7f,-size*.34f,3.4f,size*.2f,1.5f);g.fillPath(pointer,juce::AffineTransform::rotation(angle).translated(cx,cy));g.setColour(juce::Colours::white.withAlpha(.08f));g.drawEllipse(r.reduced(5),1.0f);
 }
 WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcessorEditor(&p),processor(p){
- setLookAndFeel(&look);setSize(1080,850);
+ setOpaque(true);setWantsKeyboardFocus(false);setLookAndFeel(&look);setSize(1080,850);
  title.setText("WaveBombz WASP",juce::dontSendNotification);title.setFont(juce::Font(juce::FontOptions(30.0f,juce::Font::bold)));title.setColour(juce::Label::textColourId,yellow);addAndMakeVisible(title);
  factoryPreset.addItem("Acid Bite",1);factoryPreset.addItem("Neon Pulse",2);factoryPreset.addItem("Brass Stab",3);factoryPreset.addItem("Deep Sub",4);factoryPreset.addItem("Wasp Lead",5);factoryPreset.addItem("Tech Pluck",6);factoryPreset.addItem("Dark Drone",7);factoryPreset.addItem("Retro Bass",8);factoryPreset.setSelectedId(1);factoryPreset.onChange=[this]{int id=factoryPreset.getSelectedId();if(id>=1&&id<=8)processor.loadFactoryPreset(id-1);else if(id>=9&&(size_t)(id-9)<bankFiles.size())processor.loadPreset(bankFiles[(size_t)(id-9)]);};addAndMakeVisible(factoryPreset);
  savePresetButton.onClick=[this]{fileChooser=std::make_unique<juce::FileChooser>("Save WaveBombz WASP preset",juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("WaveBombz-Preset.wasp"),"*.wasp");fileChooser->launchAsync(juce::FileBrowserComponent::saveMode|juce::FileBrowserComponent::canSelectFiles,[this](const juce::FileChooser& fc){auto f=fc.getResult();if(f!=juce::File{}){if(f.getFileExtension().isEmpty())f=f.withFileExtension(".wasp");processor.savePreset(f);}});};addAndMakeVisible(savePresetButton);
@@ -35,7 +35,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  for(size_t i=0;i<fxControls.size();++i){fxControls[i]=std::make_unique<juce::Slider>();fxControls[i]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);fxControls[i]->setTextBoxStyle(juce::Slider::TextBoxBelow,false,70,16);fxControls[i]->setName(fxParamNames[i]);fxControls[i]->setRange(fxMin[i],fxMax[i],i==4?1:.1);addAndMakeVisible(*fxControls[i]);fxControlLabels[i].setText(fxParamNames[i],juce::dontSendNotification);fxControlLabels[i].setColour(juce::Label::textColourId,yellow);fxControlLabels[i].setFont(juce::Font(juce::FontOptions(10,juce::Font::bold)));fxControlLabels[i].setJustificationType(juce::Justification::centred);addAndMakeVisible(fxControlLabels[i]);fxControlAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),fxParamIds[i],*fxControls[i]);}
  meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);startTimerHz(12);
 }
-WaveBombzWASPEditor::~WaveBombzWASPEditor(){setLookAndFeel(nullptr);}
+WaveBombzWASPEditor::~WaveBombzWASPEditor(){stopTimer();setLookAndFeel(nullptr);}
 void WaveBombzWASPEditor::addKnob(const juce::String& id,const juce::String& label){
  auto s=std::make_unique<juce::Slider>();s->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);s->setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,18);s->setName(label);s->setTooltip(label+" — right-click to edit value");addAndMakeVisible(*s);
  attachments.push_back(std::make_unique<SliderAttachment>(processor.getState(),id,*s));knobs.push_back(std::move(s));
