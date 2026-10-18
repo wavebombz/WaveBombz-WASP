@@ -59,7 +59,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  const char* fxParamNames[]={"COMP THRESHOLD","DIST AMOUNT","LOW SHELF","HIGH SHELF","DELAY TIME","DELAY MIX","REVERB MIX","VOCODER MIX"};
  const float fxMin[]={-60,0,-12,-12,1,0,0,0},fxMax[]={0,1,12,12,1500,1,1,1};
  for(size_t i=0;i<fxControls.size();++i){fxControls[i]=std::make_unique<juce::Slider>();fxControls[i]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);fxControls[i]->setTextBoxStyle(juce::Slider::TextBoxBelow,false,70,16);fxControls[i]->setName(fxParamNames[i]);fxControls[i]->setRange(fxMin[i],fxMax[i],i==4?1:.1);addAndMakeVisible(*fxControls[i]);fxControlLabels[i].setText(fxParamNames[i],juce::dontSendNotification);fxControlLabels[i].setColour(juce::Label::textColourId,yellow);fxControlLabels[i].setFont(juce::Font(juce::FontOptions(10,juce::Font::bold)));fxControlLabels[i].setJustificationType(juce::Justification::centred);addAndMakeVisible(fxControlLabels[i]);fxControlAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),fxParamIds[i],*fxControls[i]);}
- meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);setFxPage(false);setSize(1080,900);startTimerHz(12);
+ meterText.setText("MOMENTARY LOUDNESS  -100 LUFS     INTEGRATED LOUDNESS  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);setFxPage(false);setSize(1200,800);startTimerHz(12);
 }
 WaveBombzWASPEditor::~WaveBombzWASPEditor(){stopTimer();setLookAndFeel(nullptr);}
 void WaveBombzWASPEditor::setFxPage(bool showFx){
@@ -98,19 +98,34 @@ void WaveBombzWASPEditor::paint(juce::Graphics& g){
 }
 void WaveBombzWASPEditor::resized(){
  if (knobs.size() < 17) return;
- title.setBounds(22,8,350,40);subtitle.setBounds(24,47,500,20);synthPageButton.setBounds(365,18,76,30);fxPageButton.setBounds(445,18,58,30);factoryPreset.setBounds(515,20,145,28);savePresetButton.setBounds(666,20,100,28);loadPresetButton.setBounds(770,20,100,28);openBankButton.setBounds(874,20,100,28);voiceMode.setBounds(978,20,80,28);portamento.setBounds(885,52,170,20);oscLabel.setBounds(30,98,180,22);filterLabel.setBounds(348,98,220,22);envLabel.setBounds(30,316,220,22);lfoLabel.setBounds(665,98,250,22);
- auto place=[&](int i,int x,int y,int w=90,int h=100){knobs[(size_t)i]->setBounds(x,y,w,h);};
- place(0,35,125,90,82);place(1,125,125,90,82);place(2,215,125,90,82);
- for(size_t i=0;i<3;++i){int x=27+(int)i*98;oscillatorTuneLabels[i].setBounds(x+3,184,84,12);oscillatorTuneSliders[i].setBounds(x,196,91,20);oscillatorOctaveLabels[i].setBounds(x+3,216,84,12);oscillatorOctaveSelectors[i].setBounds(x,228,91,22);oscillatorWaveSelectors[i].setBounds(x,252,91,22);sampleButtons[i].setBounds(x,276,91,23);}place(3,355,125);place(4,450,125);place(5,545,125);
- place(6,45,344,100);place(7,150,344,100);place(8,255,344,100);place(9,360,344,100);
- place(10,670,135);place(11,765,135);place(15,865,135);place(16,960,135);place(12,670,250);place(13,765,250);place(14,865,250);
- modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(35+col*255,541+row*34,150,18);fxSwitches[i]->setBounds(35+col*255,558+row*34,150,24);}
- for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(170+col*220,615+row*85,135,16);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
- meterText.setBounds(22,865,1030,28);
+ const int W=getWidth(),H=getHeight();const float sx=W/1200.0f,sy=H/800.0f;
+ auto R=[&](float x,float y,float w,float h){return juce::Rectangle<int>((int)(x*sx),(int)(y*sy),(int)(w*sx),(int)(h*sy));};
+ auto bounds=[&](juce::Component& c,float x,float y,float w,float h){c.setBounds(R(x,y,w,h));};
+ bounds(title,24,5,360,38);bounds(subtitle,25,42,500,18);bounds(synthPageButton,425,17,74,28);bounds(fxPageButton,502,17,50,28);
+ bounds(factoryPreset,570,17,150,28);bounds(savePresetButton,725,17,90,28);bounds(loadPresetButton,819,17,90,28);bounds(openBankButton,913,17,90,28);bounds(voiceMode,1007,17,82,28);bounds(portamento,1005,49,160,18);
+ bounds(oscLabel,30,91,250,20);bounds(filterLabel,30,355,250,20);bounds(envLabel,480,355,180,20);bounds(lfoLabel,865,355,260,20);
+ auto place=[&](int i,float x,float y,float w=90,float h=90){bounds(*knobs[(size_t)i],x,y,w,h);};
+ // Three equal oscillator modules across the upper row.
+ for(int i=0;i<3;++i){
+  const float x=18.0f+i*388.0f;
+  if(i==0)place(0,x+16,126,66,64);else if(i==1)place(1,x+16,126,66,64);else place(2,x+16,126,66,64);
+  bounds(oscillatorWaveSelectors[(size_t)i],x+18,194,205,28);
+  bounds(sampleButtons[(size_t)i],x+230,194,135,28);
+  bounds(oscillatorTuneLabels[(size_t)i],x+18,229,95,12);bounds(oscillatorTuneSliders[(size_t)i],x+18,242,165,21);
+  bounds(oscillatorOctaveLabels[(size_t)i],x+195,229,95,12);bounds(oscillatorOctaveSelectors[(size_t)i],x+195,242,170,23);
+ }
+ place(3,35,405,80,80);place(4,145,405,80,80);place(5,255,405,80,80);
+ place(6,495,402,65,70);place(7,570,402,65,70);place(8,645,402,65,70);place(9,720,402,65,70);
+ place(10,865,401,70,70);place(11,945,401,70,70);place(15,1025,401,70,70);place(16,1100,401,70,70);
+ place(12,865,485,70,70);place(13,945,485,70,70);place(14,1025,485,70,70);
+ bounds(modTitle,860,565,260,20);bounds(modSource,860,590,115,25);bounds(modTarget,980,590,145,25);bounds(modDepthLabel,860,621,60,18);bounds(modDepth,920,621,205,22);
+ for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);bounds(fxSwitchLabels[i],32+col*286,650+row*34,170,17);bounds(*fxSwitches[i],32+col*286,668+row*34,170,23);}
+ for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);bounds(fxControlLabels[i],30+col*286,650+row*72,190,16);bounds(*fxControls[i],80+col*286,666+row*72,90,58);}
+ bounds(meterText,22,772,1155,22);
  if(showFxPage){
-   for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(42+col*258,125+row*32,170,20);fxSwitches[i]->setBounds(42+col*258,146+row*32,170,25);}
-   for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(30+col*260,230+row*230,210,20);fxControls[i]->setBounds(70+col*260,255+row*230,130,125);}
-   meterText.setBounds(22,815,1030,28);
+   for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);bounds(fxSwitchLabels[i],42+col*286,145+row*42,190,20);bounds(*fxSwitches[i],42+col*286,166+row*42,190,28);}
+   for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);bounds(fxControlLabels[i],30+col*286,260+row*210,220,20);bounds(*fxControls[i],75+col*286,285+row*210,130,120);}
+   bounds(meterText,22,770,1155,22);
  }
 }
 void WaveBombzWASPEditor::timerCallback(){float pk=processor.getPeak();meterText.setText("MOMENTARY LOUDNESS  "+juce::String(processor.getMomentaryLUFS(),1)+" LUFS     INTEGRATED LOUDNESS  "+juce::String(processor.getIntegratedLUFS(),1)+" LUFS     PEAK  "+(pk>0?juce::String(juce::Decibels::gainToDecibels(pk),1):juce::String("-inf"))+" dBFS",juce::dontSendNotification);}
