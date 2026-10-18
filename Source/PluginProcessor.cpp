@@ -19,7 +19,7 @@ public:
   fenv.setParameters({v("FATTACK",.01f),v("FDECAY",.2f),v("FSUSTAIN",.6f),v("FRELEASE",.3f)});
   const int s1=(int)v("OSC1WAVE",1),s2=(int)v("OSC2WAVE",0),s3=(int)v("OSC3WAVE",2);
   const float m1=v("OSC1MIX",.8f),m2=v("OSC2MIX",.45f),m3=v("OSC3MIX",.25f);
-  const float analog=v("ANALOG",0.25f),digital=v("DIGITALEDGE",0.0f); const float t1=std::pow(2.0f,(v("OSC1TUNE")+12.0f*v("OSC1OCT",2)-0.0f)/12.0f),t2=std::pow(2.0f,(v("OSC2TUNE")+12.0f*(v("OSC2OCT",2)-2.0f))/12.0f+analog*0.006f),t3=std::pow(2.0f,(v("OSC3TUNE",12)+12.0f*(v("OSC3OCT",3)-2.0f))/12.0f-analog*0.009f);
+  const float analog=v("ANALOG",0.25f),digital=v("DIGITALEDGE",0.0f); const float t1=std::pow(2.0f,(v("OSC1TUNE")+12.0f*(v("OSC1OCT",2)-2.0f))/12.0f),t2=std::pow(2.0f,(v("OSC2TUNE")+12.0f*(v("OSC2OCT",2)-2.0f))/12.0f+analog*0.006f),t3=std::pow(2.0f,(v("OSC3TUNE",12)+12.0f*(v("OSC3OCT",3)-2.0f))/12.0f-analog*0.009f);
   const float fm=juce::jlimit(0.0f,1.0f,v("FM")+digital*0.35f),ring=juce::jlimit(0.0f,1.0f,v("RING")+digital*0.3f),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");
   const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
