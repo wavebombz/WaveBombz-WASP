@@ -77,8 +77,15 @@ bool WaveBombzWASPProcessor::isBusesLayoutSupported(const BusesLayout& l)const{r
 void WaveBombzWASPProcessor::processBlock(juce::AudioBuffer<float>& b,juce::MidiBuffer& midi){
  juce::ScopedNoDenormals no;
  const int mode=(int)apvts.getRawParameterValue("MONO")->load();
- if(mode>0){int lastNote=-1;for(const auto meta:midi)if(meta.getMessage().isNoteOn())lastNote=meta.getMessage().getNoteNumber();
-  if(lastNote>=0){juce::MidiBuffer mono;for(const auto meta:midi){auto m=meta.getMessage();if(m.isNoteOn()){if(m.getNoteNumber()==lastNote)mono.addEvent(m,meta.samplePosition);}else if(m.isNoteOff()&&m.getNoteNumber()==lastNote)mono.addEvent(m,meta.samplePosition);else if(!m.isNoteOnOrOff())mono.addEvent(m,meta.samplePosition);}midi.swapWith(mono);}
+ if(mode>0){
+  juce::MidiBuffer mono;int newNote=-1;
+  for(const auto meta:midi){auto m=meta.getMessage();
+   if(m.isNoteOn()){if(mode==1&&monoNote>=0&&monoNote!=m.getNoteNumber())mono.addEvent(juce::MidiMessage::noteOff(m.getChannel(),monoNote),meta.samplePosition);mono.addEvent(m,meta.samplePosition);newNote=m.getNoteNumber();}
+   else if(m.isNoteOff()){if(m.getNoteNumber()==monoNote||m.getNoteNumber()==newNote){mono.addEvent(m,meta.samplePosition);if(m.getNoteNumber()==monoNote)monoNote=-1;}}
+   else mono.addEvent(m,meta.samplePosition);
+  }
+  if(newNote>=0&&newNote!=monoNote){synth.allNotesOff(1,false);monoNote=newNote;}
+  midi.swapWith(mono);
  }
  b.clear();synth.renderNextBlock(b,midi,0,b.getNumSamples());
  auto raw=[this](const char* id){return apvts.getRawParameterValue(id)->load();};
