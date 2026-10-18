@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WASPPRESET name="Retro Bass">
+  <PARAM id="OSC1WAVE" value="1"/>
+  <PARAM id="OSC2WAVE" value="2"/>
+  <PARAM id="OSC3WAVE" value="1"/>
+  <PARAM id="OSC1MIX" value="0.75"/>
+  <PARAM id="OSC2MIX" value="0.55"/>
+  <PARAM id="OSC3MIX" value="0.1"/>
+  <PARAM id="CUTOFF" value="1100"/>
+  <PARAM id="RESONANCE" value="0.65"/>
+  <PARAM id="ATTACK" value="0.005"/>
+  <PARAM id="DECAY" value="0.3"/>
+  <PARAM id="SUSTAIN" value="0.25"/>
+  <PARAM id="RELEASE" value="0.15"/>
+  <PARAM id="DRIVE" value="2.8"/>
+  <PARAM id="FXDIST" value="1"/>
+  <PARAM id="MONO" value="1"/>
+</WASPPRESET>
