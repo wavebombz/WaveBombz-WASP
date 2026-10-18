@@ -25,6 +25,6 @@ private:
  juce::dsp::DelayLine<float,juce::dsp:: DelayLineInterpolationTypes::Linear> delay { 192000 };
  std::vector<juce::dsp::IIR::Filter<float>> eqLow, eqHigh;
  std::atomic<float> momentary{-100.0f}, integrated{-100.0f}, peak{0.0f};
- double integratedEnergy=0.0; uint64_t integratedSamples=0;
+ double integratedEnergy=0.0; uint64_t integratedSamples=0; int monoNote=-1;
  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveBombzWASPProcessor)
 };
