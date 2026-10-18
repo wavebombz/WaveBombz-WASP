@@ -16,9 +16,9 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  addKnob("OSC1MIX","OSC 1 MIX");addKnob("OSC2MIX","OSC 2 MIX");addKnob("OSC3MIX","OSC 3 MIX");addKnob("CUTOFF","CUTOFF");addKnob("RESONANCE","RESONANCE");addKnob("DRIVE","DRIVE");
  addKnob("ATTACK","ATTACK");addKnob("DECAY","DECAY");addKnob("SUSTAIN","SUSTAIN");addKnob("RELEASE","RELEASE");addKnob("LFO1RATE","LFO RATE");addKnob("LFO1AMT","LFO AMOUNT");addKnob("ENV2CUT","ENV 2 > CUT");addKnob("LFO1CUT","LFO > CUT");addKnob("MASTER","MASTER");
  modTitle.setText("MODULATION ROUTING",juce::dontSendNotification);modTitle.setColour(juce::Label::textColourId,yellow);modTitle.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(modTitle);
- modSource.addItem("ENV 2",1);modSource.addItem("LFO 1",2);modSource.setSelectedId(1);addAndMakeVisible(modSource);
- modTarget.addItem("Cutoff",1);modTarget.addItem("OSC 1 Mix",2);modTarget.addItem("OSC 2 Mix",3);modTarget.setSelectedId(1);addAndMakeVisible(modTarget);
- modDepth.setSliderStyle(juce::Slider::LinearHorizontal);modDepth.setRange(0,1,.01);modDepth.setValue(.35);modDepth.setTextBoxStyle(juce::Slider::TextBoxRight,false,60,20);addAndMakeVisible(modDepth);
+ modSource.addItem("ENV 2",1);modSource.addItem("LFO 1",2);addAndMakeVisible(modSource);sourceAttachment=std::make_unique<ComboAttachment>(processor.getState(),"MODSOURCE",modSource);
+ modTarget.addItem("Cutoff",1);modTarget.addItem("OSC 1 Mix",2);modTarget.addItem("OSC 2 Mix",3);addAndMakeVisible(modTarget);targetAttachment=std::make_unique<ComboAttachment>(processor.getState(),"MODTARGET",modTarget);
+ modDepth.setSliderStyle(juce::Slider::LinearHorizontal);modDepth.setTextBoxStyle(juce::Slider::TextBoxRight,false,60,20);addAndMakeVisible(modDepth);depthAttachment=std::make_unique<SliderAttachment>(processor.getState(),"MODDEPTH",modDepth);
  modDepthLabel.setText("DEPTH",juce::dontSendNotification);modDepthLabel.setColour(juce::Label::textColourId,dim);addAndMakeVisible(modDepthLabel);
  meterText.setText("MOMENTARY  -100 LUFS     INTEGRATED  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);startTimerHz(12);
 }
