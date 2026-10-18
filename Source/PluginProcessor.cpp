@@ -97,6 +97,22 @@ void WaveBombzWASPProcessor::processBlock(juce::AudioBuffer<float>& b,juce::Midi
 juce::AudioProcessorEditor* WaveBombzWASPProcessor::createEditor(){return new WaveBombzWASPEditor(*this);}bool WaveBombzWASPProcessor::hasEditor()const{return true;}
 const juce::String WaveBombzWASPProcessor::getName()const{return JucePlugin_Name;}bool WaveBombzWASPProcessor::acceptsMidi()const{return true;}bool WaveBombzWASPProcessor::producesMidi()const{return false;}bool WaveBombzWASPProcessor::isMidiEffect()const{return false;}double WaveBombzWASPProcessor::getTailLengthSeconds()const{return 8;}
 int WaveBombzWASPProcessor::getNumPrograms(){return 1;}int WaveBombzWASPProcessor::getCurrentProgram(){return 0;}void WaveBombzWASPProcessor::setCurrentProgram(int){}const juce::String WaveBombzWASPProcessor::getProgramName(int){return {};}void WaveBombzWASPProcessor::changeProgramName(int,const juce::String&){}
+void WaveBombzWASPProcessor::loadFactoryPreset(int index){
+ struct Setting{const char* id;float value;};
+ static const std::vector<std::vector<Setting>> presets={
+  {{"OSC1WAVE",1},{"OSC2WAVE",0},{"OSC3WAVE",2},{"OSC1MIX",.8f},{"OSC2MIX",.35f},{"OSC3MIX",.15f},{"CUTOFF",1450},{"RESONANCE",.72f},{"ATTACK",.005f},{"DECAY",.24f},{"SUSTAIN",.1f},{"RELEASE",.18f},{"FM",.15f},{"DRIVE",2.2f}},
+  {{"OSC1WAVE",1},{"OSC2WAVE",2},{"OSC3WAVE",0},{"OSC1MIX",.7f},{"OSC2MIX",.4f},{"OSC3MIX",.2f},{"CUTOFF",7200},{"RESONANCE",.15f},{"ATTACK",.01f},{"DECAY",.6f},{"SUSTAIN",.75f},{"RELEASE",.45f},{"LFO1RATE",.35f},{"LFO1AMT",.2f}},
+  {{"OSC1WAVE",2},{"OSC2WAVE",1},{"OSC3WAVE",0},{"OSC1MIX",.6f},{"OSC2MIX",.45f},{"OSC3MIX",.15f},{"CUTOFF",2200},{"RESONANCE",.25f},{"ATTACK",.01f},{"DECAY",.45f},{"SUSTAIN",.25f},{"RELEASE",.3f},{"DRIVE",1.4f}},
+  {{"OSC1WAVE",0},{"OSC2WAVE",0},{"OSC3WAVE",0},{"OSC1MIX",.35f},{"OSC2MIX",.5f},{"OSC3MIX",.1f},{"CUTOFF",240},{"RESONANCE",.15f},{"ATTACK",.02f},{"DECAY",.3f},{"SUSTAIN",.85f},{"RELEASE",.25f}},
+  {{"OSC1WAVE",1},{"OSC2WAVE",1},{"OSC3WAVE",2},{"OSC1MIX",.7f},{"OSC2MIX",.55f},{"OSC3MIX",.35f},{"OSC2TUNE",7},{"OSC3TUNE",12},{"CUTOFF",4200},{"RESONANCE",.35f},{"ATTACK",.03f},{"DECAY",.7f},{"SUSTAIN",.6f},{"RELEASE",.5f}},
+  {{"OSC1WAVE",2},{"OSC2WAVE",0},{"OSC3WAVE",1},{"OSC1MIX",.8f},{"OSC2MIX",.25f},{"OSC3MIX",.15f},{"CUTOFF",1900},{"RESONANCE",.55f},{"ATTACK",.001f},{"DECAY",.16f},{"SUSTAIN",.05f},{"RELEASE",.12f},{"FXCOMP",1},{"FXREVERB",1},{"FXREVERBMIX",.12f}},
+  {{"OSC1WAVE",0},{"OSC2WAVE",1},{"OSC3WAVE",2},{"OSC1MIX",.3f},{"OSC2MIX",.35f},{"OSC3MIX",.4f},{"CUTOFF",650},{"RESONANCE",.4f},{"ATTACK",1.2f},{"DECAY",2.0f},{"SUSTAIN",.75f},{"RELEASE",3.0f},{"FXREVERB",1},{"FXREVERBMIX",.45f},{"FXPHASER",1}},
+  {{"OSC1WAVE",1},{"OSC2WAVE",2},{"OSC3WAVE",1},{"OSC1MIX",.75f},{"OSC2MIX",.55f},{"OSC3MIX",.1f},{"CUTOFF",1100},{"RESONANCE",.65f},{"ATTACK",.005f},{"DECAY",.3f},{"SUSTAIN",.25f},{"RELEASE",.15f},{"DRIVE",2.8f},{"FXDIST",1}}
+ };
+ if(index<0||index>=(int)presets.size())return;
+ auto state=apvts.copyState();
+ for(const auto& s:presets[(size_t)index])if(auto* param=apvts.getParameter(s.id))param->setValueNotifyingHost(param->convertTo0to1(s.value));
+}
 bool WaveBombzWASPProcessor::savePreset(const juce::File& file){auto state=apvts.copyState();std::unique_ptr<juce::XmlElement> xml(state.createXml());return xml!=nullptr&&xml->writeTo(file);}
 bool WaveBombzWASPProcessor::loadPreset(const juce::File& file){auto xml=juce::XmlDocument::parse(file);if(!xml||!xml->hasTagName(apvts.state.getType()))return false;apvts.replaceState(juce::ValueTree::fromXml(*xml));return true;}
 void WaveBombzWASPProcessor::getStateInformation(juce::MemoryBlock& d){auto s=apvts.copyState();std::unique_ptr<juce::XmlElement>x(s.createXml());copyXmlToBinary(*x,d);}
