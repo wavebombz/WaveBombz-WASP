@@ -20,15 +20,15 @@ public:
   const int s1=(int)v("OSC1WAVE",1),s2=(int)v("OSC2WAVE",0),s3=(int)v("OSC3WAVE",2);
   const float m1=v("OSC1MIX",.8f),m2=v("OSC2MIX",.45f),m3=v("OSC3MIX",.25f);
   const float t2=std::pow(2.0f,v("OSC2TUNE")/12.0f),t3=std::pow(2.0f,v("OSC3TUNE",12)/12.0f);
-  const float fm=v("FM"),ring=v("RING"),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");
+  const float fm=v("FM"),ring=v("RING"),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");\n  const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
   for(int i=0;i<n;++i){
    float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
    lfoPhase+=2*pi*lrate/sr;if(lfoPhase>2*pi)lfoPhase-=2*pi;
-   float a=wave(s1,phase[0]),b=wave(s2,phase[1]+fm*a*4),c=wave(s3,phase[2]);
+   float a=wave(s1,phase[0]),b=wave(s2,phase[1]+fm*a*4),c=wave(s3,phase[2]);\n   const float route=(modSource==0?fe:lfo)*modDepth;
    phase[0]+=2*pi*hz/sr;phase[1]+=2*pi*hz*t2/sr;phase[2]+=2*pi*hz*t3/sr;for(auto& q:phase)if(q>2*pi)q-=2*pi;
-   float x=(a*m1+b*m2+c*m3)*(1-ring)+(a*b)*ring;
-   float fc=juce::jlimit(25.0f,18000.0f,v("CUTOFF",8000)*std::pow(2.0f,(fe*ec+lfo*lc+lfo*lamt)*4));
+   float x=(a*juce::jlimit(0.0f,1.0f,m1+(modTarget==1?route:0.0f))+b*juce::jlimit(0.0f,1.0f,m2+(modTarget==2?route:0.0f))+c*m3)*(1-ring)+(a*b)*ring;
+   float routeCut=(modTarget==0?route:0.0f); float fc=juce::jlimit(25.0f,18000.0f,v("CUTOFF",8000)*std::pow(2.0f,(fe*ec+lfo*lc+lfo*lamt+routeCut)*4));
    filter+=(1-std::exp(-2*pi*fc/sr))*(x-filter);x=std::tanh(filter*drive*2)*env*vel*.22f;
    for(int ch=0;ch<out.getNumChannels();++ch)out.addSample(ch,start+i,x);
    if(!amp.isActive()){clearCurrentNote();break;}
@@ -50,7 +50,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout WaveBombzWASPProcessor::crea
  f("CUTOFF","Filter Cutoff",25,18000,8000);f("RESONANCE","Resonance",0,1,.1f);
  f("ATTACK","Amp Attack",.001f,5,.01f);f("DECAY","Amp Decay",.001f,5,.18f);f("SUSTAIN","Amp Sustain",0,1,.8f);f("RELEASE","Amp Release",.001f,8,.25f);
  f("FATTACK","Filter Attack",.001f,5,.01f);f("FDECAY","Filter Decay",.001f,5,.2f);f("FSUSTAIN","Filter Sustain",0,1,.6f);f("FRELEASE","Filter Release",.001f,8,.3f);
- f("FM","FM Amount",0,1,0);f("RING","Ring Mod",0,1,0);f("DRIVE","Distortion Drive",.1f,5,1);
+ f("FM","FM Amount",0,1,0);f("RING","Ring Mod",0,1,0);f("DRIVE","Distortion Drive",.1f,5,1);c("MODSOURCE","Mod Source",{"ENV 2","LFO 1"},0);c("MODTARGET","Mod Target",{"Cutoff","OSC 1 Mix","OSC 2 Mix"},0);f("MODDEPTH","Mod Depth",0,1,.35f);
  f("LFO1RATE","LFO 1 Rate",.05f,20,2);f("LFO1AMT","LFO 1 Amount",0,1,0);f("ENV2CUT","ENV 2 > Cutoff",0,1,0);f("LFO1CUT","LFO 1 > Cutoff",0,1,0);f("MASTER","Master",0,1,.75f);return p;
 }
 void WaveBombzWASPProcessor::prepareToPlay(double sr,int){
