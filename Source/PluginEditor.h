@@ -9,10 +9,10 @@ public: WaspLookAndFeel(); void drawRotarySlider(juce::Graphics&,int,int,int,int
 class WaveBombzWASPEditor final : public juce::AudioProcessorEditor, private juce::Timer {
 public: explicit WaveBombzWASPEditor(WaveBombzWASPProcessor&); ~WaveBombzWASPEditor() override; void paint(juce::Graphics&) override; void resized() override;
 private:
- void timerCallback() override; void addKnob(const juce::String&,const juce::String&);
+ void timerCallback() override; void addKnob(const juce::String&,const juce::String&); void setFxPage(bool showFx);
  using SliderAttachment=juce::AudioProcessorValueTreeState::SliderAttachment; using ComboAttachment=juce::AudioProcessorValueTreeState::ComboBoxAttachment;
  WaveBombzWASPProcessor& processor; WaspLookAndFeel look;
- juce::Label title,subtitle,meterText,modTitle,oscLabel,filterLabel,envLabel,lfoLabel,modDepthLabel;
+ juce::Label title,subtitle,meterText,modTitle,oscLabel,filterLabel,envLabel,lfoLabel,modDepthLabel;\n juce::TextButton synthPageButton{"SYNTH"},fxPageButton{"FX"}; bool showFxPage=false;
  std::vector<std::unique_ptr<juce::Slider>> knobs; std::vector<std::unique_ptr<SliderAttachment>> attachments;
  juce::ComboBox modSource,modTarget,factoryPreset,voiceMode;
  juce::Slider modDepth,portamento;
