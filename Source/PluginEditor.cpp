@@ -10,7 +10,7 @@ void WaspLookAndFeel::drawRotarySlider(juce::Graphics& g,int x,int y,int w,int h
 WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcessorEditor(&p),processor(p){
  setOpaque(true);setWantsKeyboardFocus(false);setLookAndFeel(&look);
  synthPageButton.onClick=[this]{setFxPage(false);}; fxPageButton.onClick=[this]{setFxPage(true);};
- for(auto* b:{&synthPageButton,&fxPageButton}){b->setColour(juce::TextButton::buttonColourId,juce::Colour(42,45,48));b->setColour(juce::TextButton::buttonOnColourId,yellow);b->setColour(juce::TextButton::textColourOff,yellow);b->setColour(juce::TextButton::textColourOn,black);addAndMakeVisible(*b);}
+ for(auto* b:{&synthPageButton,&fxPageButton}){b->setColour(juce::TextButton::buttonColourId,juce::Colour(42,45,48));b->setColour(juce::TextButton::buttonOnColourId,yellow);b->setColour(juce::TextButton::textColourOffId,yellow);b->setColour(juce::TextButton::textColourOnId,black);addAndMakeVisible(*b);}
  title.setText("WaveBombz WASP",juce::dontSendNotification);title.setFont(juce::Font(juce::FontOptions(30.0f,juce::Font::bold)));title.setColour(juce::Label::textColourId,yellow);addAndMakeVisible(title);
  factoryPreset.addItem("Acid Bite",1);factoryPreset.addItem("Neon Pulse",2);factoryPreset.addItem("Brass Stab",3);factoryPreset.addItem("Deep Sub",4);factoryPreset.addItem("Wasp Lead",5);factoryPreset.addItem("Tech Pluck",6);factoryPreset.addItem("Dark Drone",7);factoryPreset.addItem("Retro Bass",8);factoryPreset.setSelectedId(1);factoryPreset.onChange=[this]{int id=factoryPreset.getSelectedId();if(id>=1&&id<=8)processor.loadFactoryPreset(id-1);else if(id>=9&&(size_t)(id-9)<bankFiles.size())processor.loadPreset(bankFiles[(size_t)(id-9)]);};addAndMakeVisible(factoryPreset);
  savePresetButton.onClick=[this]{fileChooser=std::make_unique<juce::FileChooser>("Save WaveBombz WASP preset",juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("WaveBombz-Preset.wasp"),"*.wasp");fileChooser->launchAsync(juce::FileBrowserComponent::saveMode|juce::FileBrowserComponent::canSelectFiles,[this](const juce::FileChooser& fc){auto f=fc.getResult();if(f!=juce::File{}){if(f.getFileExtension().isEmpty())f=f.withFileExtension(".wasp");processor.savePreset(f);}});};addAndMakeVisible(savePresetButton);
@@ -42,7 +42,8 @@ void WaveBombzWASPEditor::setFxPage(bool showFx){
  showFxPage=showFx;
  synthPageButton.setToggleState(!showFx,juce::dontSendNotification);fxPageButton.setToggleState(showFx,juce::dontSendNotification);
  for(auto& k:knobs)k->setVisible(!showFx);
- for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel,&modTitle,&modDepthLabel})l->setVisible(!showFx);\n modSource.setVisible(!showFx);modTarget.setVisible(!showFx);modDepth.setVisible(!showFx);
+ for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel,&modTitle,&modDepthLabel})l->setVisible(!showFx);
+ modSource.setVisible(!showFx);modTarget.setVisible(!showFx);modDepth.setVisible(!showFx);
  for(auto& s:fxSwitches)s->setVisible(showFx);for(auto& l:fxSwitchLabels)l.setVisible(showFx);
  for(auto& s:fxControls)s->setVisible(showFx);for(auto& l:fxControlLabels)l.setVisible(showFx);
  resized();repaint();
