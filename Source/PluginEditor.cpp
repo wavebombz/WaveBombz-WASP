@@ -32,7 +32,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  const char* fxParamIds[]={"FXCOMPTHRESH","FXDISTAMT","FXEQLOW","FXEQHIGH","FXDELAYTIME","FXDELAYMIX","FXREVERBMIX","FXVOCODERMIX"};
  const char* fxParamNames[]={"COMP THRESH","DIST AMOUNT","EQ LOW","EQ HIGH","DELAY TIME","DELAY MIX","REVERB MIX","VOCODER MIX"};
  const float fxMin[]={-60,0,-12,-12,1,0,0,0},fxMax[]={0,1,12,12,1500,1,1,1};
- for(size_t i=0;i<fxControls.size();++i){fxControls[i]=std::make_unique<juce::Slider>();fxControls[i]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);fxControls[i]->setTextBoxStyle(juce::Slider::TextBoxBelow,false,70,16);fxControls[i]->setName(fxParamNames[i]);fxControls[i]->setRange(fxMin[i],fxMax[i],i==4?1:.1);addAndMakeVisible(*fxControls[i]);fxControlAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),fxParamIds[i],*fxControls[i]);}
+ for(size_t i=0;i<fxControls.size();++i){fxControls[i]=std::make_unique<juce::Slider>();fxControls[i]->setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);fxControls[i]->setTextBoxStyle(juce::Slider::TextBoxBelow,false,70,16);fxControls[i]->setName(fxParamNames[i]);fxControls[i]->setRange(fxMin[i],fxMax[i],i==4?1:.1);addAndMakeVisible(*fxControls[i]);fxControlLabels[i].setText(fxParamNames[i],juce::dontSendNotification);fxControlLabels[i].setColour(juce::Label::textColourId,yellow);fxControlLabels[i].setFont(juce::Font(juce::FontOptions(10,juce::Font::bold)));fxControlLabels[i].setJustificationType(juce::Justification::centred);addAndMakeVisible(fxControlLabels[i]);fxControlAttachments[i]=std::make_unique<SliderAttachment>(processor.getState(),fxParamIds[i],*fxControls[i]);}
  meterText.setText("MOMENTARY  -100 LUFS     INTEGRATED  -100 LUFS     PEAK  -inf dBFS",juce::dontSendNotification);meterText.setColour(juce::Label::textColourId,yellow);meterText.setFont(juce::Font(juce::FontOptions(13,juce::Font::bold)));addAndMakeVisible(meterText);startTimerHz(12);
 }
 WaveBombzWASPEditor::~WaveBombzWASPEditor(){setLookAndFeel(nullptr);}
@@ -53,7 +53,7 @@ void WaveBombzWASPEditor::resized(){
  place(6,45,320,100);place(7,150,320,100);place(8,255,320,100);place(9,360,320,100);
  place(10,670,135);place(11,765,135);place(12,670,250);place(13,765,250);place(14,865,250);
  modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitches[i]->setBounds(35+col*255,565+row*34,150,24);}
- for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
+ for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(170+col*220,615+row*85,135,16);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
  meterText.setBounds(22,815,1030,28);
 }
 void WaveBombzWASPEditor::timerCallback(){float pk=processor.getPeak();meterText.setText("MOMENTARY  "+juce::String(processor.getMomentaryLUFS(),1)+" LUFS     INTEGRATED  "+juce::String(processor.getIntegratedLUFS(),1)+" LUFS     PEAK  "+(pk>0?juce::String(juce::Decibels::gainToDecibels(pk),1):juce::String("-inf"))+" dBFS",juce::dontSendNotification);}
