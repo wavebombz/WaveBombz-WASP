@@ -1,6 +1,9 @@
 #pragma once
 #include <JuceHeader.h>
 #include <atomic>
+#include <array>
+#include <vector>
+#include <utility>
 class WaveBombzWASPProcessor final : public juce::AudioProcessor {
 public:
  WaveBombzWASPProcessor(); ~WaveBombzWASPProcessor() override = default;
