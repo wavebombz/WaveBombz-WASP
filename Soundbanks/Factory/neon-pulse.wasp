@@ -14,5 +14,5 @@
   <PARAM id="RELEASE" value="0.45"/>
   <PARAM id="LFO1RATE" value="0.35"/>
   <PARAM id="LFO1AMT" value="0.2"/>
-  <PARAM id="FXCHORUS" value="1"/>
+  <PARAM id="FXFLANGER" value="1"/>
 </WASPPRESET>
