@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WASPPRESET name="Acid Bite">
+  <PARAM id="OSC1WAVE" value="1"/>
+  <PARAM id="OSC2WAVE" value="0"/>
+  <PARAM id="OSC3WAVE" value="2"/>
+  <PARAM id="OSC1MIX" value="0.8"/>
+  <PARAM id="OSC2MIX" value="0.35"/>
+  <PARAM id="OSC3MIX" value="0.15"/>
+  <PARAM id="CUTOFF" value="1450"/>
+  <PARAM id="RESONANCE" value="0.72"/>
+  <PARAM id="ATTACK" value="0.005"/>
+  <PARAM id="DECAY" value="0.24"/>
+  <PARAM id="SUSTAIN" value="0.1"/>
+  <PARAM id="RELEASE" value="0.18"/>
+  <PARAM id="FM" value="0.15"/>
+  <PARAM id="DRIVE" value="2.2"/>
+  <PARAM id="FXDIST" value="1"/>
+</WASPPRESET>
