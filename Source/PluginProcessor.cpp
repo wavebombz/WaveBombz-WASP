@@ -19,8 +19,8 @@ public:
   fenv.setParameters({v("FATTACK",.01f),v("FDECAY",.2f),v("FSUSTAIN",.6f),v("FRELEASE",.3f)});
   const int s1=(int)v("OSC1WAVE",1),s2=(int)v("OSC2WAVE",0),s3=(int)v("OSC3WAVE",2);
   const float m1=v("OSC1MIX",.8f),m2=v("OSC2MIX",.45f),m3=v("OSC3MIX",.25f);
-  const float t2=std::pow(2.0f,v("OSC2TUNE")/12.0f),t3=std::pow(2.0f,v("OSC3TUNE",12)/12.0f);
-  const float fm=v("FM"),ring=v("RING"),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");
+  const float analog=v("ANALOG",0.25f),digital=v("DIGITALEDGE",0.0f); const float t2=std::pow(2.0f,v("OSC2TUNE")/12.0f+analog*0.006f),t3=std::pow(2.0f,v("OSC3TUNE",12)/12.0f-analog*0.009f);
+  const float fm=juce::jlimit(0.0f,1.0f,v("FM")+digital*0.35f),ring=juce::jlimit(0.0f,1.0f,v("RING")+digital*0.3f),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");
   const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
   for(int i=0;i<n;++i){
@@ -30,7 +30,7 @@ public:
    float a=wave(s1,phase[0]),b=wave(s2,phase[1]+fm*a*4),c=wave(s3,phase[2]);
    const float route=(modSource==0?fe:lfo)*modDepth;
    phase[0]+=2*pi*hz/sr;phase[1]+=2*pi*hz*t2/sr;phase[2]+=2*pi*hz*t3/sr;for(auto& q:phase)if(q>2*pi)q-=2*pi;
-   float x=(a*juce::jlimit(0.0f,1.0f,m1+(modTarget==1?route:0.0f))+b*juce::jlimit(0.0f,1.0f,m2+(modTarget==2?route:0.0f))+c*m3)*(1-ring)+(a*b)*ring;
+   float x=(a*juce::jlimit(0.0f,1.0f,m1+(modTarget==1?route:0.0f))+b*juce::jlimit(0.0f,1.0f,m2+(modTarget==2?route:0.0f))+c*m3)*(1-ring)+(a*b)*ring; x=std::tanh(x*(1.0f+analog*0.18f));
    float routeCut=(modTarget==0?route:0.0f); float fc=juce::jlimit(25.0f,18000.0f,v("CUTOFF",8000)*std::pow(2.0f,(fe*ec+lfo*lc+lfo*lamt+routeCut)*4));
    filter+=(1-std::exp(-2*pi*fc/sr))*(x-filter);x=std::tanh(filter*drive*2)*env*vel*.22f;
    for(int ch=0;ch<out.getNumChannels();++ch)out.addSample(ch,start+i,x);
@@ -58,7 +58,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout WaveBombzWASPProcessor::crea
  c("MONO","Voice Mode",{"Poly","Mono","Legato"},0);f("PORTAMENTO","Portamento",0,1,0);
  c("FXCOMP","FX Compressor",{"Off","On"},0);c("FXDIST","FX Distortion",{"Off","On"},0);c("FXEQ","FX EQ",{"Off","On"},0);c("FXDELAY","FX Delay",{"Off","On"},0);c("FXREVERB","FX Reverb",{"Off","On"},0);c("FXFLANGER","FX Flanger",{"Off","On"},0);c("FXPHASER","FX Phaser",{"Off","On"},0);c("FXVOCODER","FX Vocoder",{"Off","On"},0);
  f("FXCOMPTHRESH","Comp Threshold",-60,0,-18);f("FXDISTAMT","FX Distortion",0,1,.25f);f("FXEQLOW","EQ Low",-12,12,0);f("FXEQHIGH","EQ High",-12,12,0);f("FXDELAYTIME","Delay Time",1,1500,360);f("FXDELAYFB","Delay Feedback",0,.95f,.3f);f("FXDELAYMIX","Delay Mix",0,1,.25f);f("FXREVERBMIX","Reverb Mix",0,1,.2f);f("FXFLANGERMIX","Flanger Mix",0,1,.2f);f("FXPHASERMIX","Phaser Mix",0,1,.2f);f("FXVOCODERMIX","Vocoder Mix",0,1,.5f);
- f("MASTER","Master",0,1,.75f);return p;
+ f("ANALOG","Analog Character",0,1,.25f);f("DIGITALEDGE","Digital Edge",0,1,0);f("MASTER","Master",0,1,.75f);return p;
 }
 void WaveBombzWASPProcessor::prepareToPlay(double sr,int){
  synth.setCurrentPlaybackSampleRate(sr);for(int i=0;i<synth.getNumVoices();++i)if(auto* v=dynamic_cast<WaspVoice*>(synth.getVoice(i)))v->prepare(sr);
