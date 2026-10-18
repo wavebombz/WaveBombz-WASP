@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WASPPRESET name="Wasp Lead">
+  <PARAM id="OSC1WAVE" value="1"/>
+  <PARAM id="OSC2WAVE" value="1"/>
+  <PARAM id="OSC3WAVE" value="2"/>
+  <PARAM id="OSC1MIX" value="0.7"/>
+  <PARAM id="OSC2MIX" value="0.55"/>
+  <PARAM id="OSC3MIX" value="0.35"/>
+  <PARAM id="OSC2TUNE" value="7"/>
+  <PARAM id="OSC3TUNE" value="12"/>
+  <PARAM id="CUTOFF" value="4200"/>
+  <PARAM id="RESONANCE" value="0.35"/>
+  <PARAM id="ATTACK" value="0.03"/>
+  <PARAM id="DECAY" value="0.7"/>
+  <PARAM id="SUSTAIN" value="0.6"/>
+  <PARAM id="RELEASE" value="0.5"/>
+  <PARAM id="MONO" value="2"/>
+  <PARAM id="PORTAMENTO" value="0.08"/>
+</WASPPRESET>
