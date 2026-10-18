@@ -17,7 +17,7 @@ private:
  std::vector<std::unique_ptr<juce::Slider>> knobs; std::vector<std::unique_ptr<SliderAttachment>> attachments;
  std::array<juce::ComboBox,3> oscillatorWaveSelectors;
  std::array<std::unique_ptr<ComboAttachment>,3> oscillatorWaveAttachments;
- std::array<juce::TextButton,3> sampleButtons{{juce::TextButton("LOAD OSC 1 SAMPLE"),juce::TextButton("LOAD OSC 2 SAMPLE"),juce::TextButton("LOAD OSC 3 SAMPLE")}};
+ std::array<juce::TextButton,3> sampleButtons;
  juce::ComboBox modSource,modTarget,factoryPreset,voiceMode;
  juce::Slider modDepth,portamento;
  // Attachments must be declared after the controls they reference so they are destroyed first.
