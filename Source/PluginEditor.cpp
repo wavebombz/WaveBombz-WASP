@@ -28,7 +28,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  modDepthLabel.setText("DEPTH",juce::dontSendNotification);modDepthLabel.setColour(juce::Label::textColourId,dim);addAndMakeVisible(modDepthLabel);
  const char* fxIds[]={"FXCOMP","FXDIST","FXEQ","FXDELAY","FXREVERB","FXFLANGER","FXPHASER","FXVOCODER"};
  const char* fxNames[]={"COMP","DISTORTION","EQ","DELAY","REVERB","FLANGER","PHASER","VOCODER"};
- for(size_t i=0;i<fxSwitches.size();++i){fxSwitches[i]=std::make_unique<juce::ComboBox>();fxSwitches[i]->addItem("OFF",1);fxSwitches[i]->addItem("ON",2);addAndMakeVisible(*fxSwitches[i]);fxAttachments[i]=std::make_unique<ComboAttachment>(processor.getState(),fxIds[i],*fxSwitches[i]);}
+ for(size_t i=0;i<fxSwitches.size();++i){fxSwitches[i]=std::make_unique<juce::ComboBox>();fxSwitches[i]->addItem("OFF",1);fxSwitches[i]->addItem("ON",2);addAndMakeVisible(*fxSwitches[i]);fxSwitchLabels[i].setText(fxNames[i],juce::dontSendNotification);fxSwitchLabels[i].setColour(juce::Label::textColourId,yellow);fxSwitchLabels[i].setFont(juce::Font(juce::FontOptions(10,juce::Font::bold)));addAndMakeVisible(fxSwitchLabels[i]);fxAttachments[i]=std::make_unique<ComboAttachment>(processor.getState(),fxIds[i],*fxSwitches[i]);}
  const char* fxParamIds[]={"FXCOMPTHRESH","FXDISTAMT","FXEQLOW","FXEQHIGH","FXDELAYTIME","FXDELAYMIX","FXREVERBMIX","FXVOCODERMIX"};
  const char* fxParamNames[]={"COMP THRESH","DIST AMOUNT","EQ LOW","EQ HIGH","DELAY TIME","DELAY MIX","REVERB MIX","VOCODER MIX"};
  const float fxMin[]={-60,0,-12,-12,1,0,0,0},fxMax[]={0,1,12,12,1500,1,1,1};
@@ -52,7 +52,7 @@ void WaveBombzWASPEditor::resized(){
  place(0,35,125);place(1,125,125);place(2,215,125);place(3,355,125);place(4,450,125);place(5,545,125);
  place(6,45,320,100);place(7,150,320,100);place(8,255,320,100);place(9,360,320,100);
  place(10,670,135);place(11,765,135);place(12,670,250);place(13,765,250);place(14,865,250);
- modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitches[i]->setBounds(35+col*255,565+row*34,150,24);}
+ modTitle.setBounds(668,365,280,22);modSource.setBounds(668,394,125,28);modTarget.setBounds(802,394,145,28);modDepthLabel.setBounds(668,426,55,22);modDepth.setBounds(720,426,225,24);for(size_t i=0;i<fxSwitches.size();++i){int col=(int)(i%4),row=(int)(i/4);fxSwitchLabels[i].setBounds(35+col*255,541+row*34,150,18);fxSwitches[i]->setBounds(35+col*255,558+row*34,150,24);}
  for(size_t i=0;i<fxControls.size();++i){int col=(int)(i%4),row=(int)(i/4);fxControlLabels[i].setBounds(170+col*220,615+row*85,135,16);fxControls[i]->setBounds(190+col*220,630+row*85,95,80);}
  meterText.setBounds(22,815,1030,28);
 }
