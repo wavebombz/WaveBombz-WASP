@@ -24,7 +24,8 @@ public:
   const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
   for(int i=0;i<n;++i){
-   float glide=state.getRawParameterValue("PORTAMENTO")->load();if(glide>0.001f)hz+=(targetHz-hz)*juce::jlimit(0.00001f,0.02f,1.0f/(glide*1200.0f));else hz=targetHz;\n   float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
+   float glide=state.getRawParameterValue("PORTAMENTO")->load();if(glide>0.001f)hz+=(targetHz-hz)*juce::jlimit(0.00001f,0.02f,1.0f/(glide*1200.0f));else hz=targetHz;
+   float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
    lfoPhase+=2*pi*lrate/sr;if(lfoPhase>2*pi)lfoPhase-=2*pi;
    float a=wave(s1,phase[0]),b=wave(s2,phase[1]+fm*a*4),c=wave(s3,phase[2]);
    const float route=(modSource==0?fe:lfo)*modDepth;
