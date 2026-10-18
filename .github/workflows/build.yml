@@ -35,8 +35,15 @@ jobs:
           $exe = Get-ChildItem pluginval -Recurse -File -Filter "pluginval.exe" | Select-Object -First 1
           if (-not $exe) { throw "pluginval.exe not found in downloaded archive." }
           New-Item -ItemType Directory -Force -Path pluginval-logs | Out-Null
-          & $exe.FullName --strictness-level 5 --output-dir "$PWD/pluginval-logs" "${{ steps.vst3.outputs.plugin_path }}"
-          if ($LASTEXITCODE -ne 0) { throw "pluginval failed with exit code $LASTEXITCODE" }
+          "pluginval executable: $($exe.FullName)" | Set-Content pluginval-logs/diagnostics.txt
+          "VST3 path: ${{ steps.vst3.outputs.plugin_path }}" | Add-Content pluginval-logs/diagnostics.txt
+          $pluginPath = "${{ steps.vst3.outputs.plugin_path }}"
+          $arguments = @("--strictness-level", "5", "--output-dir", "$PWD/pluginval-logs", "`"$pluginPath`"")
+          $proc = Start-Process -FilePath $exe.FullName -ArgumentList $arguments -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$PWD/pluginval-logs/stdout.txt" -RedirectStandardError "$PWD/pluginval-logs/stderr.txt"
+          "pluginval exit code: $($proc.ExitCode)" | Add-Content pluginval-logs/diagnostics.txt
+          if (Test-Path pluginval-logs/stdout.txt) { Get-Content pluginval-logs/stdout.txt | Add-Content pluginval-logs/diagnostics.txt }
+          if (Test-Path pluginval-logs/stderr.txt) { Get-Content pluginval-logs/stderr.txt | Add-Content pluginval-logs/diagnostics.txt }
+          if ($proc.ExitCode -ne 0) { throw "pluginval failed with exit code $($proc.ExitCode). See uploaded pluginval logs." }
       - name: Upload pluginval logs
         if: always()
         uses: actions/upload-artifact@v4
