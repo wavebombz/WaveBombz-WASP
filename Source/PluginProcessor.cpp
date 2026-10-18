@@ -6,9 +6,9 @@ float wave(int shape,float phase){float p=phase/(2.0f*pi);switch(shape){case 1:r
 class WaspSound final:public juce::SynthesiserSound {public: bool appliesToNote(int) override{return true;} bool appliesToChannel(int) override{return true;}};
 class WaspVoice final:public juce::SynthesiserVoice {
 public:
- explicit WaspVoice(juce::AudioProcessorValueTreeState& s):state(s){}
+ explicit WaspVoice(juce::AudioProcessorValueTreeState& s,std::array<std::shared_ptr<const juce::AudioBuffer<float>>,3>& samples,std::array<std::atomic<double>,3>& rates):state(s),sampleBuffers(samples),sampleRates(rates){}
  bool canPlaySound(juce::SynthesiserSound* s) override{return dynamic_cast<WaspSound*>(s)!=nullptr;}
- void startNote(int midi,float velocity,juce::SynthesiserSound*,int) override{targetHz=(float)juce::MidiMessage::getMidiNoteInHertz(midi);float porta=state.getRawParameterValue("PORTAMENTO")->load();if(hz<=0.0f||porta<=0.001f||(int)state.getRawParameterValue("MONO")->load()!=2)hz=targetHz;vel=velocity;phase.fill(0);filter=0;amp.noteOn();fenv.noteOn();}
+ void startNote(int midi,float velocity,juce::SynthesiserSound*,int) override{targetHz=(float)juce::MidiMessage::getMidiNoteInHertz(midi);float porta=state.getRawParameterValue("PORTAMENTO")->load();if(hz<=0.0f||porta<=0.001f||(int)state.getRawParameterValue("MONO")->load()!=2)hz=targetHz;vel=velocity;midiNote=midi;phase.fill(0);samplePositions.fill(0.0);filter=0;amp.noteOn();fenv.noteOn();}
  void stopNote(float,bool tail) override{amp.noteOff();fenv.noteOff();if(!tail)clearCurrentNote();}
  void pitchWheelMoved(int) override{} void controllerMoved(int,int) override{}
  void prepare(double sr){rate=sr;amp.setSampleRate(sr);fenv.setSampleRate(sr);amp.setParameters({.01f,.18f,.8f,.25f});fenv.setParameters({.01f,.2f,.6f,.3f});}
@@ -23,11 +23,13 @@ public:
   const float fm=juce::jlimit(0.0f,1.0f,v("FM")+digital*0.35f),ring=juce::jlimit(0.0f,1.0f,v("RING")+digital*0.3f),drive=v("DRIVE",1),lrate=v("LFO1RATE",2),lamt=v("LFO1AMT"),ec=v("ENV2CUT"),lc=v("LFO1CUT");
   const int modSource=(int)v("MODSOURCE"),modTarget=(int)v("MODTARGET"); const float modDepth=v("MODDEPTH",0.35f);
   const float sr=(float)rate;
+  std::array<std::shared_ptr<const juce::AudioBuffer<float>>,3> samples;for(size_t k=0;k<samples.size();++k)samples[k]=std::atomic_load(&sampleBuffers[k]);
   for(int i=0;i<n;++i){
    float glide=state.getRawParameterValue("PORTAMENTO")->load();if(glide>0.001f)hz+=(targetHz-hz)*juce::jlimit(0.00001f,0.02f,1.0f/(glide*1200.0f));else hz=targetHz;
    float env=amp.getNextSample(),fe=fenv.getNextSample(),lfo=std::sin(lfoPhase);
    lfoPhase+=2*pi*lrate/sr;if(lfoPhase>2*pi)lfoPhase-=2*pi;
-   float a=wave(s1,phase[0]),b=wave(s2,phase[1]+fm*a*4),c=wave(s3,phase[2]);
+   auto sampleValue=[&](int slot){const auto& sm=samples[(size_t)slot];if(!sm||sm->getNumSamples()<2)return wave(slot==0?s1:(slot==1?s2:s3),phase[(size_t)slot]);double pos=samplePositions[(size_t)slot];int idx=(int)pos;if(idx<0||idx>=sm->getNumSamples())return 0.0f;int next=juce::jmin(idx+1,sm->getNumSamples()-1);float frac=(float)(pos-idx);float value=sm->getSample(0,idx)+(sm->getSample(0,next)-sm->getSample(0,idx))*frac;double sourceRate=sampleRates[(size_t)slot].load();double pitch=std::pow(2.0,(double)(midiNote-60)/12.0);samplePositions[(size_t)slot]+=sourceRate/rate*pitch;return value;};
+   float a=sampleValue(0),b=sampleValue(1),c=sampleValue(2);
    const float route=(modSource==0?fe:lfo)*modDepth;
    phase[0]+=2*pi*hz/sr;phase[1]+=2*pi*hz*t2/sr;phase[2]+=2*pi*hz*t3/sr;for(auto& q:phase)if(q>2*pi)q-=2*pi;
    float x=(a*juce::jlimit(0.0f,1.0f,m1+(modTarget==1?route:0.0f))+b*juce::jlimit(0.0f,1.0f,m2+(modTarget==2?route:0.0f))+c*m3)*(1-ring)+(a*b)*ring; x=std::tanh(x*(1.0f+analog*0.18f));
@@ -38,11 +40,13 @@ public:
   }
  }
 private:
- juce::AudioProcessorValueTreeState& state;juce::ADSR amp,fenv;std::array<float,3> phase{0,0,0};double rate=44100;float hz=440,targetHz=440,vel=0,filter=0,lfoPhase=0;
+ juce::AudioProcessorValueTreeState& state;std::array<std::shared_ptr<const juce::AudioBuffer<float>>,3>& sampleBuffers;std::array<std::atomic<double>,3>& sampleRates;juce::ADSR amp,fenv;std::array<float,3> phase{0,0,0};std::array<double,3> samplePositions{0,0,0};double rate=44100;int midiNote=60;float hz=440,targetHz=440,vel=0,filter=0,lfoPhase=0;
 };
 }
 WaveBombzWASPProcessor::WaveBombzWASPProcessor():AudioProcessor(BusesProperties().withOutput("Output",juce::AudioChannelSet::stereo(),true)),apvts(*this,nullptr,"PARAMETERS",createParameterLayout()){
- for(int i=0;i<12;++i)synth.addVoice(new WaspVoice(apvts));synth.addSound(new WaspSound());
+ sampleFormats.registerBasicFormats();
+ for(auto& sr:oscillatorSampleRates)sr.store(44100.0);
+ for(int i=0;i<12;++i)synth.addVoice(new WaspVoice(apvts,oscillatorSamples,oscillatorSampleRates));synth.addSound(new WaspSound());
 }
 juce::AudioProcessorValueTreeState::ParameterLayout WaveBombzWASPProcessor::createParameterLayout(){
  using F=juce::AudioParameterFloat;using C=juce::AudioParameterChoice;juce::AudioProcessorValueTreeState::ParameterLayout p;
@@ -102,6 +106,27 @@ void WaveBombzWASPProcessor::processBlock(juce::AudioBuffer<float>& b,juce::Midi
  for(int ch=0;ch<b.getNumChannels();++ch)for(int i=0;i<b.getNumSamples();++i){float x=b.getSample(ch,i);if((size_t)ch<meterFilters.size()){x=meterFilters[(size_t)ch].first.processSample(x);x=meterFilters[(size_t)ch].second.processSample(x);}sum+=(double)x*x;++count;float pk=std::abs(b.getSample(ch,i)),old=peak.load();while(pk>old&&!peak.compare_exchange_weak(old,pk)){}}
  if(count){float rms=(float)std::sqrt(sum/count);float l=juce::Decibels::gainToDecibels(rms,-100.0f)-.691f;momentary.store(l);if(l>-70){integratedEnergy+=sum;integratedSamples+=(uint64_t)count;integrated.store(juce::Decibels::gainToDecibels((float)std::sqrt(integratedEnergy/(double)integratedSamples),-100.0f)-.691f);}}
 }
+
+bool WaveBombzWASPProcessor::loadOscillatorSample(int oscillator,const juce::File& file){
+ if(oscillator<0||oscillator>=3||!file.existsAsFile())return false;
+ std::unique_ptr<juce::AudioFormatReader> reader(sampleFormats.createReaderFor(file));
+ if(!reader||reader->lengthInSamples<1||reader->lengthInSamples>static_cast<juce::int64>(reader->sampleRate*600.0))return false;
+ auto buffer=std::make_shared<juce::AudioBuffer<float>>(1,(int)reader->lengthInSamples);
+ if(!reader->read(buffer.get(),0,(int)reader->lengthInSamples,0,true,false))return false;
+ std::shared_ptr<const juce::AudioBuffer<float>> immutable=buffer;
+ std::atomic_store(&oscillatorSamples[(size_t)oscillator],immutable);
+ oscillatorSampleRates[(size_t)oscillator].store(reader->sampleRate);
+ apvts.state.setProperty("OSC_SAMPLE_PATH_"+juce::String(oscillator+1),file.getFullPathName(),nullptr);
+ return true;
+}
+juce::String WaveBombzWASPProcessor::getOscillatorSampleName(int oscillator)const{
+ if(oscillator<0||oscillator>=3)return {};
+ auto path=apvts.state.getProperty("OSC_SAMPLE_PATH_"+juce::String(oscillator+1)).toString();
+ return path.isEmpty()?juce::String("No sample loaded"):juce::File(path).getFileName();
+}
+void WaveBombzWASPProcessor::restoreOscillatorSamples(){
+ for(int i=0;i<3;++i){auto path=apvts.state.getProperty("OSC_SAMPLE_PATH_"+juce::String(i+1)).toString();if(path.isNotEmpty())loadOscillatorSample(i,juce::File(path));else std::atomic_store(&oscillatorSamples[(size_t)i],std::shared_ptr<const juce::AudioBuffer<float>>{});}
+}
 juce::AudioProcessorEditor* WaveBombzWASPProcessor::createEditor(){return new WaveBombzWASPEditor(*this);}bool WaveBombzWASPProcessor::hasEditor()const{return true;}
 const juce::String WaveBombzWASPProcessor::getName()const{return JucePlugin_Name;}bool WaveBombzWASPProcessor::acceptsMidi()const{return true;}bool WaveBombzWASPProcessor::producesMidi()const{return false;}bool WaveBombzWASPProcessor::isMidiEffect()const{return false;}double WaveBombzWASPProcessor::getTailLengthSeconds()const{return 8;}
 int WaveBombzWASPProcessor::getNumPrograms(){return 1;}int WaveBombzWASPProcessor::getCurrentProgram(){return 0;}void WaveBombzWASPProcessor::setCurrentProgram(int){}const juce::String WaveBombzWASPProcessor::getProgramName(int){return {};}void WaveBombzWASPProcessor::changeProgramName(int,const juce::String&){}
@@ -124,12 +149,12 @@ void WaveBombzWASPProcessor::loadFactoryPreset(int index){
 bool WaveBombzWASPProcessor::savePreset(const juce::File& file){auto state=apvts.copyState();std::unique_ptr<juce::XmlElement> xml(state.createXml());return xml!=nullptr&&xml->writeTo(file);}
 bool WaveBombzWASPProcessor::loadPreset(const juce::File& file){
  auto xml=juce::XmlDocument::parse(file);if(!xml)return false;
- if(xml->hasTagName(apvts.state.getType())){apvts.replaceState(juce::ValueTree::fromXml(*xml));return true;}
+ if(xml->hasTagName(apvts.state.getType())){apvts.replaceState(juce::ValueTree::fromXml(*xml));restoreOscillatorSamples();return true;}
  if(!xml->hasTagName("WASPPRESET"))return false;
  for(auto* p=xml->getFirstChildElement();p;p=p->getNextElement())if(p->hasTagName("PARAM")){auto id=p->getStringAttribute("id");auto* param=apvts.getParameter(id);if(param)param->setValueNotifyingHost(param->convertTo0to1((float)p->getDoubleAttribute("value")));}
  return true;
 }
 void WaveBombzWASPProcessor::getStateInformation(juce::MemoryBlock& d){auto s=apvts.copyState();std::unique_ptr<juce::XmlElement>x(s.createXml());copyXmlToBinary(*x,d);}
-void WaveBombzWASPProcessor::setStateInformation(const void* d,int n){std::unique_ptr<juce::XmlElement>x(getXmlFromBinary(d,n));if(x&&x->hasTagName(apvts.state.getType()))apvts.replaceState(juce::ValueTree::fromXml(*x));}
+void WaveBombzWASPProcessor::setStateInformation(const void* d,int n){std::unique_ptr<juce::XmlElement>x(getXmlFromBinary(d,n));if(x&&x->hasTagName(apvts.state.getType())){apvts.replaceState(juce::ValueTree::fromXml(*x));restoreOscillatorSamples();}}
 juce::AudioProcessorValueTreeState& WaveBombzWASPProcessor::getState(){return apvts;}float WaveBombzWASPProcessor::getMomentaryLUFS()const{return momentary.load();}float WaveBombzWASPProcessor::getIntegratedLUFS()const{return integrated.load();}float WaveBombzWASPProcessor::getPeak(){return peak.exchange(0.0f);}
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){return new WaveBombzWASPProcessor();}
