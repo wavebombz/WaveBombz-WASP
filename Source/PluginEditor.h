@@ -12,6 +12,15 @@ private:
  WaveBombzWASPProcessor& processor; WaspLookAndFeel look;
  juce::Label title,subtitle,meterText,modTitle,oscLabel,filterLabel,envLabel,lfoLabel,modDepthLabel;
  std::vector<std::unique_ptr<juce::Slider>> knobs; std::vector<std::unique_ptr<SliderAttachment>> attachments; std::unique_ptr<ComboAttachment> sourceAttachment,targetAttachment; std::unique_ptr<SliderAttachment> depthAttachment;
- juce::ComboBox modSource,modTarget; juce::Slider modDepth;
+ juce::ComboBox modSource,modTarget,factoryPreset,voiceMode;
+ juce::Slider modDepth,portamento;
+ std::unique_ptr<ComboAttachment> voiceAttachment;
+ std::unique_ptr<SliderAttachment> portaAttachment;
+ std::array<std::unique_ptr<juce::ComboBox>,8> fxSwitches;
+ std::array<std::unique_ptr<ComboAttachment>,8> fxAttachments;
+ std::array<std::unique_ptr<juce::Slider>,8> fxControls;
+ std::array<std::unique_ptr<SliderAttachment>,8> fxControlAttachments;
+ juce::TextButton savePresetButton{"SAVE PRESET"},loadPresetButton{"LOAD PRESET"};
+ std::unique_ptr<juce::FileChooser> fileChooser;
  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveBombzWASPEditor)
 };
