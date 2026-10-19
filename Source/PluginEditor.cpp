@@ -13,7 +13,6 @@ void WaspLookAndFeel::drawButtonBackground(juce::Graphics& g,juce::Button& b,con
 }
 void WaspLookAndFeel::drawButtonText(juce::Graphics& g,juce::TextButton& b,bool,bool){g.setColour(b.getToggleState()?juce::Colour(18,19,20):juce::Colour(238,239,240));g.setFont(juce::Font(juce::FontOptions(11.0f,juce::Font::bold)));g.drawFittedText(b.getButtonText(),b.getLocalBounds().reduced(4),juce::Justification::centred,1);}
 void WaspLookAndFeel::drawComboBox(juce::Graphics& g,int w,int h,bool,int,int,int,int,juce::ComboBox& box){auto r=juce::Rectangle<float>(0,0,(float)w,(float)h).reduced(1);g.setColour(juce::Colours::black.withAlpha(.7f));g.fillRoundedRectangle(r.translated(1,2),4);g.setGradientFill(juce::ColourGradient(juce::Colour(45,48,51),0,0,juce::Colour(15,17,19),0,(float)h,false));g.fillRoundedRectangle(r,4);g.setColour(juce::Colour(255,205,0).withAlpha(box.hasKeyboardFocus(true)?.95f:.48f));g.drawRoundedRectangle(r,4,1);juce::Path p;p.addTriangle((float)w-16,(float)h*.42f,(float)w-8,(float)h*.42f,(float)w-12,(float)h*.60f);g.setColour(juce::Colour(255,205,0));g.fillPath(p);}
-void WaspLookAndFeel::drawLinearSlider(juce::Graphics& g,int x,int y,int w,int h,float pos,float,float,juce::Slider& s){auto r=juce::Rectangle<float>((float)x,(float)y+(float)h*.40f,(float)w,juce::jmax(3.0f,(float)h*.20f));g.setColour(juce::Colour(7,8,9));g.fillRoundedRectangle(r,3);auto fill=r.withWidth(juce::jlimit(0.0f,r.getWidth(),pos-(float)x));g.setGradientFill(juce::ColourGradient(juce::Colour(255,220,70),fill.getX(),fill.getY(),juce::Colour(226,143,0),fill.getX(),fill.getBottom(),false));g.fillRoundedRectangle(fill,3);g.setColour(juce::Colour(255,205,0).withAlpha(.7f));g.drawRoundedRectangle(r,3,1);g.setColour(juce::Colour(255,245,190));g.fillRoundedRectangle(juce::Rectangle<float>(pos-4,(float)y+2,8,(float)h-4),2);}
 WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcessorEditor(&p),processor(p){
  setOpaque(true);setWantsKeyboardFocus(false);setLookAndFeel(&look);
  synthPageButton.onClick=[this]{setFxPage(false);}; fxPageButton.onClick=[this]{setFxPage(true);};
@@ -81,7 +80,7 @@ void WaveBombzWASPEditor::paint(juce::Graphics& g){
  auto X=[&](float v){return v*sx;};auto Y=[&](float v){return v*sy;};
  g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(39,41,43),0,0,juce::Colour(8,9,10),W,H,true));g.fillAll();
  g.setGradientFill(juce::ColourGradient(juce::Colour(34,36,38),0,0,juce::Colour(10,11,12),W,Y(72),false));g.fillRect(0,0,W,Y(72));
- g.setColour(yellow.withAlpha(.9f));g.fillRect(0,Y(71),W,Y(2));
+ g.setColour(yellow.withAlpha(.9f));g.fillRect(0.0f,Y(71),W,Y(2));
  g.setColour(yellow.withAlpha(.07f));for(int i=0;i<42;++i){float xx=X((float)i*30);g.drawLine(xx,0,xx+X(20),Y(72),1.0f);}
  g.setColour(juce::Colour(255,205,0).withAlpha(.22f));g.drawRect(1,1,getWidth()-2,getHeight()-2,1);
  auto box=[&](float x,float y,float w,float h,const juce::String& name){auto r=juce::Rectangle<float>(X(x),Y(y),X(w),Y(h));g.setColour(juce::Colours::black.withAlpha(.78f));g.fillRoundedRectangle(r.translated(X(2),Y(3)),8);g.setGradientFill(juce::ColourGradient(juce::Colour(35,38,40),r.getX(),r.getY(),juce::Colour(15,17,18),r.getRight(),r.getBottom(),false));g.fillRoundedRectangle(r,8);g.setColour(yellow.withAlpha(.72f));g.drawRoundedRectangle(r,8,1.1f);g.setColour(yellow.withAlpha(.11f));g.fillRoundedRectangle(r.getX()+1,r.getY()+1,r.getWidth()-2,Y(22),7);g.setColour(yellow);g.fillRect(r.getX()+X(9),r.getY()+Y(7),X(3),Y(12));g.setFont(juce::Font(juce::FontOptions(12.0f*sx,juce::Font::bold)));g.drawText(name,(int)(r.getX()+X(18)),(int)(r.getY()+Y(2)),(int)(r.getWidth()-X(25)),(int)Y(20),juce::Justification::centredLeft);};
@@ -97,7 +96,7 @@ void WaveBombzWASPEditor::paint(juce::Graphics& g){
  // Metallic panel rails, subtle grid and honeycomb-inspired technical texture.
  g.setColour(yellow.withAlpha(.7f));for(float x:{18.0f,412.0f,806.0f})g.fillRect(X(x),Y(88),X(376),Y(2));
  g.setColour(yellow.withAlpha(.08f));for(int i=0;i<36;++i){float xx=X(20+i*33.0f);g.drawLine(xx,Y(610),xx+X(18),Y(650),1.0f);}
- g.setColour(juce::Colour(255,255,255).withAlpha(.025f));for(int y=90;y<780;y+=5)g.fillRect(0,Y((float)y),W,Y(1));
+ g.setColour(juce::Colour(255,255,255).withAlpha(.025f));for(int y=90;y<780;y+=5)g.fillRect(0.0f,Y((float)y),W,Y(1));
 }
 void WaveBombzWASPEditor::resized(){
  if (knobs.size() < 17) return;
