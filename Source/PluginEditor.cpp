@@ -79,7 +79,7 @@ void WaveBombzWASPEditor::paint(juce::Graphics& g){
  const float W=(float)getWidth(),H=(float)getHeight();const float sx=W/1200.0f,sy=H/800.0f;
  auto X=[&](float v){return v*sx;};auto Y=[&](float v){return v*sy;};
  g.fillAll(black);g.setGradientFill(juce::ColourGradient(juce::Colour(39,41,43),0,0,juce::Colour(8,9,10),W,H,true));g.fillAll();
- g.setGradientFill(juce::ColourGradient(juce::Colour(34,36,38),0,0,juce::Colour(10,11,12),W,Y(72),false));g.fillRect(0,0,W,Y(72));
+ g.setGradientFill(juce::ColourGradient(juce::Colour(34,36,38),0,0,juce::Colour(10,11,12),W,Y(72),false));g.fillRect(0.0f,0.0f,W,Y(72));
  g.setColour(yellow.withAlpha(.9f));g.fillRect(0.0f,Y(71),W,Y(2));
  g.setColour(yellow.withAlpha(.07f));for(int i=0;i<42;++i){float xx=X((float)i*30);g.drawLine(xx,0,xx+X(20),Y(72),1.0f);}
  g.setColour(juce::Colour(255,205,0).withAlpha(.22f));g.drawRect(1,1,getWidth()-2,getHeight()-2,1);
