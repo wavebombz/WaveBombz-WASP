@@ -26,7 +26,7 @@ WaveBombzWASPEditor::WaveBombzWASPEditor(WaveBombzWASPProcessor& p):AudioProcess
  portamento.setSliderStyle(juce::Slider::LinearHorizontal);portamento.setTextBoxStyle(juce::Slider::TextBoxRight,false,48,18);portamento.setTooltip("Portamento time");addAndMakeVisible(portamento);portaAttachment=std::make_unique<SliderAttachment>(processor.getState(),"PORTAMENTO",portamento);
  subtitle.setText("TRI-OSC PERFORMANCE SYNTH  /  MODULATION MATRIX",juce::dontSendNotification);subtitle.setFont(juce::Font(juce::FontOptions(12.0f)));subtitle.setColour(juce::Label::textColourId,dim);addAndMakeVisible(subtitle);
  oscLabel.setText("OSCILLATORS",juce::dontSendNotification);filterLabel.setText("FILTER / DRIVE",juce::dontSendNotification);envLabel.setText("AMP ENVELOPE",juce::dontSendNotification);lfoLabel.setText("LFO / MOD MATRIX",juce::dontSendNotification);
- for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel}){l->setFont(juce::Font(juce::FontOptions(14,juce::Font::bold)));l->setColour(juce::Label::textColourId,yellow);addAndMakeVisible(*l);}
+ for(auto* l:{&oscLabel,&filterLabel,&envLabel,&lfoLabel}){l->setFont(juce::Font(juce::FontOptions(14,juce::Font::bold)));l->setColour(juce::Label::textColourId,yellow);addAndMakeVisible(*l);l->setVisible(false);}
  addKnob("OSC1MIX","OSC 1 MIX");addKnob("OSC2MIX","OSC 2 MIX");addKnob("OSC3MIX","OSC 3 MIX");
  const char* waveIds[]={"OSC1WAVE","OSC2WAVE","OSC3WAVE"};
  const char* tuneIds[]={"OSC1TUNE","OSC2TUNE","OSC3TUNE"};
@@ -109,7 +109,7 @@ void WaveBombzWASPEditor::resized(){
  auto place=[&](int i,float x,float y,float w=90,float h=90){bounds(*knobs[(size_t)i],x,y,w,h);};
  // Three equal oscillator modules across the upper row.
  for(int i=0;i<3;++i){
-  const float x=18.0f+i*388.0f;
+  const float x=18.0f+i*394.0f;
   if(i==0)place(0,x+16,126,66,64);else if(i==1)place(1,x+16,126,66,64);else place(2,x+16,126,66,64);
   bounds(oscillatorWaveSelectors[(size_t)i],x+18,194,205,28);
   bounds(sampleButtons[(size_t)i],x+230,194,135,28);
