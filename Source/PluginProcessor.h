@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <utility>
+#include <memory>
 class WaveBombzWASPProcessor final : public juce::AudioProcessor {
 public:
  WaveBombzWASPProcessor(); ~WaveBombzWASPProcessor() override = default;
@@ -16,10 +17,15 @@ public:
  const juce::String getProgramName(int) override; void changeProgramName(int,const juce::String&) override;
  void getStateInformation(juce::MemoryBlock&) override; void setStateInformation(const void*,int) override;
  bool savePreset(const juce::File&); bool loadPreset(const juce::File&); void loadFactoryPreset(int index);
+ bool loadOscillatorSample(int oscillator, const juce::File& file); juce::String getOscillatorSampleName(int oscillator) const;
  juce::AudioProcessorValueTreeState& getState(); float getMomentaryLUFS() const; float getIntegratedLUFS() const; float getPeak();
  static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 private:
  juce::AudioProcessorValueTreeState apvts; juce::Synthesiser synth;
+ juce::AudioFormatManager sampleFormats;
+ std::array<std::shared_ptr<const juce::AudioBuffer<float>>,3> oscillatorSamples{};
+ std::array<std::atomic<double>,3> oscillatorSampleRates{};
+ void restoreOscillatorSamples();
  std::vector<std::pair<juce::dsp::IIR::Filter<float>,juce::dsp::IIR::Filter<float>>> meterFilters;
  juce::dsp::Compressor<float> compressor;
  juce::dsp::Reverb reverb;

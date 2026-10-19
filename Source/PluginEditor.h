@@ -4,16 +4,25 @@
 #include <array>
 #include <vector>
 class WaspLookAndFeel final : public juce::LookAndFeel_V4 {
-public: WaspLookAndFeel(); void drawRotarySlider(juce::Graphics&,int,int,int,int,float,float,float,juce::Slider&) override;
+public: WaspLookAndFeel(); void drawRotarySlider(juce::Graphics&,int,int,int,int,float,float,float,juce::Slider&) override; void drawButtonBackground(juce::Graphics&,juce::Button&,const juce::Colour&,bool,bool) override; void drawButtonText(juce::Graphics&,juce::TextButton&,bool,bool) override; void drawComboBox(juce::Graphics&,int,int,bool,int,int,int,int,juce::ComboBox&) override;
 };
 class WaveBombzWASPEditor final : public juce::AudioProcessorEditor, private juce::Timer {
 public: explicit WaveBombzWASPEditor(WaveBombzWASPProcessor&); ~WaveBombzWASPEditor() override; void paint(juce::Graphics&) override; void resized() override;
 private:
- void timerCallback() override; void addKnob(const juce::String&,const juce::String&);
+ void timerCallback() override; void addKnob(const juce::String&,const juce::String&); void setFxPage(bool showFx);
  using SliderAttachment=juce::AudioProcessorValueTreeState::SliderAttachment; using ComboAttachment=juce::AudioProcessorValueTreeState::ComboBoxAttachment;
  WaveBombzWASPProcessor& processor; WaspLookAndFeel look;
  juce::Label title,subtitle,meterText,modTitle,oscLabel,filterLabel,envLabel,lfoLabel,modDepthLabel;
+ juce::TextButton synthPageButton{"SYNTH"},fxPageButton{"FX"}; bool showFxPage=false;
  std::vector<std::unique_ptr<juce::Slider>> knobs; std::vector<std::unique_ptr<SliderAttachment>> attachments;
+ std::array<juce::ComboBox,3> oscillatorWaveSelectors;
+ std::array<std::unique_ptr<ComboAttachment>,3> oscillatorWaveAttachments;
+ std::array<juce::TextButton,3> sampleButtons;
+ std::array<juce::Slider,3> oscillatorTuneSliders;
+ std::array<std::unique_ptr<SliderAttachment>,3> oscillatorTuneAttachments;
+ std::array<juce::ComboBox,3> oscillatorOctaveSelectors;
+ std::array<std::unique_ptr<ComboAttachment>,3> oscillatorOctaveAttachments;
+ std::array<juce::Label,3> oscillatorTuneLabels, oscillatorOctaveLabels;
  juce::ComboBox modSource,modTarget,factoryPreset,voiceMode;
  juce::Slider modDepth,portamento;
  // Attachments must be declared after the controls they reference so they are destroyed first.

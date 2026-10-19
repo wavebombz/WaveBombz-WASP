@@ -14,6 +14,6 @@ juce_add_plugin(WaveBombzWASP
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE COPY_PLUGIN_AFTER_BUILD FALSE FORMATS VST3 Standalone)
 juce_generate_juce_header(WaveBombzWASP)
 target_sources(WaveBombzWASP PRIVATE Source/PluginProcessor.cpp Source/PluginEditor.cpp)
-target_compile_definitions(WaveBombzWASP PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
+target_compile_definitions(WaveBombzWASP PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_USE_MP3AUDIOFORMAT=1 JUCE_VST3_CAN_REPLACE_VST2=0)
 target_link_libraries(WaveBombzWASP PRIVATE juce::juce_audio_utils juce::juce_dsp
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags juce::juce_recommended_warning_flags)
